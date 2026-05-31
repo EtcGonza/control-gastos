@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "./synthwave-theme.css";
+@import "./vaporwave-theme.css";
+@import "./popart-theme.css";
 
 html, body {
   height: 100%;
@@ -25,7 +28,8 @@ app-category-breakdown,
 app-recurring-templates,
 app-transaction-list,
 app-month-selector,
-app-data-backup {
+app-data-backup,
+app-theme-picker {
   display: block;
 }
 

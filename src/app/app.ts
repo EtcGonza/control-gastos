@@ -6,6 +6,7 @@ import { ConfirmHost } from './components/confirm-host/confirm-host';
 import { DataBackup } from './components/data-backup/data-backup';
 import { MonthSelector } from './components/month-selector/month-selector';
 import { RecurringTemplates } from './components/recurring-templates/recurring-templates';
+import { ThemePicker } from './components/theme-picker/theme-picker';
 import { SubscriptionsManager } from './components/subscriptions-manager/subscriptions-manager';
 import { SummaryCards } from './components/summary-cards/summary-cards';
 import { TransactionForm } from './components/transaction-form/transaction-form';
@@ -28,6 +29,7 @@ import { TransactionsService } from './services/transactions.service';
     UsdSummary,
     DataBackup,
     ConfirmHost,
+    ThemePicker,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',

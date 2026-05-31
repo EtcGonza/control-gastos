@@ -1,0 +1,559 @@
+/* ============================================================
+ * POP ART / COMIC BOOK THEME
+ * Se activa cuando <html> tiene la clase `.popart`.
+ * Paleta primaria saturada (rojo, azul, amarillo). Bordes
+ * negros gruesos en todo. Halftone dots de fondo. Sombras
+ * duras offset (sin blur). Fuentes Bangers / Bowlby One para
+ * títulos grandes.
+ * ============================================================ */
+
+.popart {
+  --pa-red:      #ff2d2d;
+  --pa-blue:     #0066cc;
+  --pa-yellow:   #ffe600;
+  --pa-pink:     #ff5599;
+  --pa-orange:   #ff8800;
+  --pa-cyan:     #00bce8;
+  --pa-black:    #0d0d0d;
+  --pa-white:    #fffef5;
+  --pa-cream:    #fff8d6;
+
+  --pa-border:   3px solid var(--pa-black);
+  --pa-shadow:   4px 4px 0 0 var(--pa-black);
+  --pa-shadow-sm: 2px 2px 0 0 var(--pa-black);
+}
+
+/* ===== Fondo: halftone dots + papel ===== */
+.popart body {
+  background-color: var(--pa-cream) !important;
+  background-image:
+    radial-gradient(circle, rgba(255, 45, 45, 0.18) 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(0, 102, 204, 0.10) 1px, transparent 1.5px);
+  background-size: 18px 18px, 14px 14px;
+  background-position: 0 0, 7px 7px;
+  background-attachment: scroll;
+  color: var(--pa-black) !important;
+  font-family: 'Bowlby One SC', 'Impact', 'Arial Black', sans-serif !important;
+  min-height: 100vh;
+}
+
+.popart app-root {
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== Tipografía ===== */
+.popart h1, .popart h2, .popart h3 {
+  font-family: 'Bangers', 'Bowlby One', 'Impact', sans-serif !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--pa-black) !important;
+  font-weight: 400; /* Bangers no necesita peso */
+}
+
+.popart h1.text-xl {
+  font-size: 1.8rem;
+  -webkit-text-stroke: 1px var(--pa-black);
+  text-shadow: 2px 2px 0 var(--pa-yellow);
+  color: var(--pa-red) !important;
+}
+
+.popart .text-lg {
+  font-family: 'Bangers', 'Bowlby One', sans-serif !important;
+  letter-spacing: 0.03em;
+  font-size: 1.4rem;
+}
+
+.popart .text-2xl.font-bold {
+  font-family: 'Bowlby One', 'Impact', sans-serif !important;
+  -webkit-text-stroke: 1px var(--pa-black);
+  text-shadow: 2px 2px 0 var(--pa-yellow);
+}
+
+.popart .text-sm,
+.popart .text-xs,
+.popart .text-\[11px\],
+.popart .text-\[10px\],
+.popart p,
+.popart label,
+.popart span,
+.popart button,
+.popart input,
+.popart select,
+.popart option {
+  font-family: 'Bowlby One SC', 'Impact', 'Arial Black', sans-serif !important;
+  letter-spacing: 0.02em;
+}
+
+/* ===== Cards: borde negro grueso + sombra dura ===== */
+.popart .bg-white {
+  background: var(--pa-white) !important;
+  border: var(--pa-border) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--pa-shadow) !important;
+  backdrop-filter: none !important;
+  position: relative;
+  z-index: 1;
+}
+
+.popart .bg-white\/70 {
+  background: var(--pa-white) !important;
+  border-bottom: var(--pa-border) !important;
+}
+
+/* Cards al hover de info-tooltip suben arriba */
+.popart .bg-white:has(.info-badge:hover),
+.popart .bg-white:has(.info-badge.active),
+.popart .bg-white:has(.tooltip.visible),
+.popart .group.bg-white:hover {
+  z-index: 50 !important;
+}
+
+/* ===== Colores de texto ===== */
+.popart .text-slate-800 { color: var(--pa-black) !important; }
+.popart .text-slate-700 { color: var(--pa-black) !important; }
+.popart .text-slate-600 { color: #333333 !important; }
+.popart .text-slate-500 { color: #555555 !important; }
+.popart .text-slate-400 { color: #777777 !important; }
+.popart .text-slate-300 { color: #999999 !important; }
+.popart .text-slate-200 { color: var(--pa-black) !important; }
+
+/* Acentos semánticos: ingresos azul, gastos rojo, fijos amarillo */
+.popart .text-rose-600,
+.popart .text-rose-500 {
+  color: var(--pa-red) !important;
+  -webkit-text-stroke: 0.5px var(--pa-black);
+}
+.popart .text-emerald-600,
+.popart .text-emerald-700,
+.popart .text-emerald-900 {
+  color: var(--pa-blue) !important;
+  -webkit-text-stroke: 0.5px var(--pa-black);
+}
+.popart .text-indigo-600,
+.popart .text-indigo-700,
+.popart .text-indigo-900 {
+  color: var(--pa-red) !important;
+}
+.popart .text-purple-600,
+.popart .text-purple-700 {
+  color: #cc00aa !important;
+}
+.popart .text-pink-600,
+.popart .text-pink-700 {
+  color: var(--pa-pink) !important;
+}
+.popart .text-amber-600,
+.popart .text-amber-700,
+.popart .text-amber-800,
+.popart .text-amber-900 {
+  color: #b88a00 !important;
+}
+.popart .text-blue-600 {
+  color: var(--pa-blue) !important;
+}
+
+/* ===== Bordes ===== */
+.popart .border-slate-100,
+.popart .border-slate-200,
+.popart .border-slate-300 {
+  border-color: var(--pa-black) !important;
+  border-width: 2px !important;
+}
+.popart .divide-slate-100 > * + * {
+  border-color: var(--pa-black) !important;
+  border-top-width: 2px !important;
+}
+.popart .border {
+  border-width: 2px !important;
+}
+
+/* ===== Fondos auxiliares ===== */
+.popart .bg-slate-50 {
+  background: var(--pa-cream) !important;
+  border: 2px solid var(--pa-black) !important;
+}
+.popart .bg-slate-100 {
+  background: var(--pa-cream) !important;
+  border: 2px solid var(--pa-black) !important;
+}
+.popart .hover\:bg-slate-50:hover {
+  background: var(--pa-yellow) !important;
+}
+.popart .hover\:bg-slate-100:hover {
+  background: var(--pa-yellow) !important;
+}
+.popart .hover\:bg-slate-200:hover {
+  background: var(--pa-yellow) !important;
+}
+
+/* ===== Badges con bg de color ===== */
+.popart [class*="bg-emerald-50"],
+.popart [class*="bg-emerald-100"] {
+  background: var(--pa-blue) !important;
+  color: white !important;
+  border: 2px solid var(--pa-black);
+  box-shadow: 2px 2px 0 0 var(--pa-black);
+}
+.popart [class*="bg-rose-50"],
+.popart [class*="bg-rose-100"] {
+  background: var(--pa-red) !important;
+  color: white !important;
+  border: 2px solid var(--pa-black);
+  box-shadow: 2px 2px 0 0 var(--pa-black);
+}
+.popart [class*="bg-indigo-50"],
+.popart [class*="bg-indigo-100"] {
+  background: var(--pa-yellow) !important;
+  color: var(--pa-black) !important;
+  border: 2px solid var(--pa-black);
+  box-shadow: 2px 2px 0 0 var(--pa-black);
+}
+.popart [class*="bg-purple-50"],
+.popart [class*="bg-purple-100"] {
+  background: var(--pa-pink) !important;
+  color: white !important;
+  border: 2px solid var(--pa-black);
+  box-shadow: 2px 2px 0 0 var(--pa-black);
+}
+.popart [class*="bg-pink-50"],
+.popart [class*="bg-pink-100"] {
+  background: var(--pa-pink) !important;
+  color: white !important;
+  border: 2px solid var(--pa-black);
+  box-shadow: 2px 2px 0 0 var(--pa-black);
+}
+.popart [class*="bg-amber-50"],
+.popart [class*="bg-amber-100"] {
+  background: var(--pa-yellow) !important;
+  color: var(--pa-black) !important;
+  border: 2px solid var(--pa-black);
+}
+.popart [class*="bg-teal-50"] {
+  background: var(--pa-cyan) !important;
+  color: white !important;
+  border: 2px solid var(--pa-black);
+}
+
+/* Textos dentro de los badges saltan a blanco/negro para contraste */
+.popart [class*="bg-emerald-100"] *,
+.popart [class*="bg-rose-100"] *,
+.popart [class*="bg-purple-100"] *,
+.popart [class*="bg-pink-100"] *,
+.popart [class*="bg-teal-100"] * {
+  color: white !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: none !important;
+}
+.popart [class*="bg-indigo-100"] *,
+.popart [class*="bg-amber-100"] * {
+  color: var(--pa-black) !important;
+}
+
+/* ===== Botones primarios: rojo/azul/amarillo con borde negro y sombra dura ===== */
+.popart button {
+  border-radius: 6px !important;
+  font-family: 'Bowlby One', 'Impact', sans-serif !important;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.popart button.bg-indigo-600,
+.popart button.bg-rose-600,
+.popart button.bg-pink-600 {
+  background: var(--pa-red) !important;
+  border: var(--pa-border) !important;
+  color: white !important;
+  box-shadow: var(--pa-shadow) !important;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
+}
+.popart button.bg-emerald-600,
+.popart button.bg-blue-600 {
+  background: var(--pa-blue) !important;
+  border: var(--pa-border) !important;
+  color: white !important;
+  box-shadow: var(--pa-shadow) !important;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
+}
+.popart button.bg-purple-600 {
+  background: var(--pa-pink) !important;
+  border: var(--pa-border) !important;
+  color: white !important;
+  box-shadow: var(--pa-shadow) !important;
+}
+.popart button.bg-orange-500 {
+  background: var(--pa-orange) !important;
+  border: var(--pa-border) !important;
+  color: var(--pa-black) !important;
+  box-shadow: var(--pa-shadow) !important;
+}
+.popart button.bg-slate-700 {
+  background: var(--pa-black) !important;
+  border: var(--pa-border) !important;
+  color: var(--pa-yellow) !important;
+  box-shadow: var(--pa-shadow) !important;
+}
+
+/* Hover: el botón se "presiona" (la sombra se reduce y el botón se mueve un poco) */
+.popart button.bg-indigo-600:hover,
+.popart button.bg-rose-600:hover,
+.popart button.bg-pink-600:hover,
+.popart button.bg-emerald-600:hover,
+.popart button.bg-blue-600:hover,
+.popart button.bg-purple-600:hover,
+.popart button.bg-orange-500:hover,
+.popart button.bg-slate-700:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 0 var(--pa-black) !important;
+  filter: brightness(1.05);
+}
+
+/* Botones secundarios */
+.popart button.bg-slate-100 {
+  background: var(--pa-cream) !important;
+  border: 2px solid var(--pa-black) !important;
+  box-shadow: var(--pa-shadow-sm) !important;
+  color: var(--pa-black) !important;
+}
+.popart button.bg-slate-100:hover {
+  background: var(--pa-yellow) !important;
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 0 var(--pa-black) !important;
+}
+
+/* ===== Icon badges (los círculos a la izquierda en cards) ===== */
+.popart span.bg-indigo-100,
+.popart span.bg-purple-100,
+.popart span.bg-pink-100,
+.popart span.bg-rose-100,
+.popart span.bg-emerald-100,
+.popart span.bg-amber-100,
+.popart span.bg-slate-100 {
+  background: var(--pa-yellow) !important;
+  border: 2px solid var(--pa-black) !important;
+  border-radius: 6px !important;
+  color: var(--pa-black) !important;
+  box-shadow: var(--pa-shadow-sm) !important;
+}
+.popart span.bg-emerald-100 { background: var(--pa-blue) !important; color: white !important; }
+.popart span.bg-rose-100 { background: var(--pa-red) !important; color: white !important; }
+.popart span.bg-purple-100,
+.popart span.bg-pink-100 { background: var(--pa-pink) !important; color: white !important; }
+.popart span.bg-indigo-100 { background: var(--pa-red) !important; color: white !important; }
+
+/* Header icon */
+.popart span.bg-gradient-to-br.from-indigo-500.to-purple-600 {
+  background: var(--pa-yellow) !important;
+  border: 3px solid var(--pa-black) !important;
+  box-shadow: var(--pa-shadow) !important;
+  color: var(--pa-red) !important;
+  border-radius: 8px !important;
+}
+
+/* ===== SVG icons: más gruesos y en negro / colores primarios ===== */
+.popart svg {
+  stroke-width: 2.5;
+  filter: drop-shadow(1px 1px 0 var(--pa-black));
+}
+.popart button svg {
+  stroke-width: 2.8;
+}
+
+/* ===== Inputs ===== */
+.popart input[type="text"],
+.popart input[type="number"],
+.popart input[type="date"],
+.popart input[type="month"],
+.popart select {
+  background: var(--pa-white) !important;
+  border: 2px solid var(--pa-black) !important;
+  border-radius: 4px !important;
+  color: var(--pa-black) !important;
+  font-family: 'Bowlby One SC', 'Impact', sans-serif !important;
+  letter-spacing: 0.03em;
+  box-shadow: var(--pa-shadow-sm);
+}
+.popart input::placeholder {
+  color: #888 !important;
+}
+.popart input:focus,
+.popart select:focus {
+  border-color: var(--pa-red) !important;
+  box-shadow: 4px 4px 0 0 var(--pa-red) !important;
+  outline: none !important;
+}
+.popart input[type="checkbox"] {
+  accent-color: var(--pa-red);
+  width: 18px !important;
+  height: 18px !important;
+}
+
+/* ===== Tabs (segmented controls) ===== */
+.popart div[class*="bg-slate-100"] button.bg-white,
+.popart div[class*="bg-slate-100"] button[class*="bg-white"] {
+  background: var(--pa-yellow) !important;
+  border: 2px solid var(--pa-black) !important;
+  box-shadow: var(--pa-shadow-sm) !important;
+}
+
+/* Tabs inactivos */
+.popart div[class*="bg-slate-100"] > button {
+  font-family: 'Bowlby One', sans-serif !important;
+  border: 2px solid transparent;
+}
+
+/* ===== Header ===== */
+.popart header.bg-white\/70 {
+  background: var(--pa-yellow) !important;
+  border-bottom: var(--pa-border) !important;
+  box-shadow: 0 4px 0 0 var(--pa-black) !important;
+  backdrop-filter: none !important;
+}
+
+/* ===== Modal ===== */
+.popart .overlay {
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: none !important;
+}
+.popart .modal {
+  background: var(--pa-white) !important;
+  border: var(--pa-border) !important;
+  border-radius: 10px !important;
+  box-shadow: 8px 8px 0 0 var(--pa-black), 8px 8px 0 4px var(--pa-yellow) !important;
+}
+
+/* ===== Tooltips ===== */
+.popart .tooltip {
+  background: var(--pa-black) !important;
+  border: 3px solid var(--pa-yellow) !important;
+  border-radius: 8px !important;
+  box-shadow: 4px 4px 0 0 var(--pa-red) !important;
+  color: var(--pa-yellow) !important;
+  font-family: 'Bowlby One SC', sans-serif !important;
+}
+.popart .tooltip::before {
+  background: var(--pa-black) !important;
+  border-top: 3px solid var(--pa-yellow);
+  border-left: 3px solid var(--pa-yellow);
+}
+.popart .info-badge {
+  background: var(--pa-yellow) !important;
+  color: var(--pa-black) !important;
+  border: 2px solid var(--pa-black) !important;
+  font-family: 'Bowlby One', sans-serif !important;
+}
+.popart .info-badge:hover,
+.popart .info-badge.active {
+  background: var(--pa-red) !important;
+  color: white !important;
+}
+
+/* ===== Theme picker button ===== */
+.popart .theme-picker-btn {
+  background: var(--pa-yellow) !important;
+  border: 2px solid var(--pa-black) !important;
+  color: var(--pa-black) !important;
+  box-shadow: var(--pa-shadow-sm);
+}
+.popart .theme-picker-btn:hover {
+  background: var(--pa-red) !important;
+  color: white !important;
+}
+.popart .theme-picker-panel {
+  background: var(--pa-white) !important;
+  border: var(--pa-border) !important;
+  box-shadow: var(--pa-shadow) !important;
+  border-radius: 8px !important;
+}
+
+/* ===== Barras de progreso ===== */
+.popart .bg-emerald-500 {
+  background: var(--pa-blue) !important;
+}
+.popart .bg-amber-500 {
+  background: var(--pa-yellow) !important;
+  border: 1px solid var(--pa-black);
+}
+.popart .bg-rose-500 {
+  background: var(--pa-red) !important;
+}
+.popart .bg-indigo-600 {
+  background: var(--pa-red) !important;
+}
+
+/* ===== Switch toggle ===== */
+.popart button[role="switch"] {
+  border: 2px solid var(--pa-black) !important;
+}
+.popart button[role="switch"].bg-indigo-600 {
+  background: var(--pa-red) !important;
+}
+.popart button[role="switch"].bg-slate-300 {
+  background: var(--pa-cream) !important;
+}
+
+/* ===== Paneles gradient (USD summary) ===== */
+.popart div[class*="from-emerald-50"][class*="to-teal-50"] {
+  background: var(--pa-cyan) !important;
+  border: var(--pa-border) !important;
+  box-shadow: var(--pa-shadow) !important;
+}
+.popart div[class*="from-indigo-50"][class*="to-blue-50"] {
+  background: var(--pa-yellow) !important;
+  border: var(--pa-border) !important;
+  box-shadow: var(--pa-shadow) !important;
+}
+
+/* Amber panel */
+.popart div[class*="bg-amber-50"][class*="border-amber-200"] {
+  background: var(--pa-yellow) !important;
+  border: var(--pa-border) !important;
+  box-shadow: var(--pa-shadow-sm) !important;
+}
+
+/* ===== Categoría color circles ===== */
+.popart [style*="background-color"] {
+  border: 2px solid var(--pa-black);
+  box-shadow: var(--pa-shadow-sm);
+  filter: saturate(1.5) brightness(1.05);
+}
+
+/* ===== Scrollbar custom ===== */
+.popart ::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+.popart ::-webkit-scrollbar-track {
+  background: var(--pa-cream);
+  border: 2px solid var(--pa-black);
+}
+.popart ::-webkit-scrollbar-thumb {
+  background: var(--pa-red);
+  border: 2px solid var(--pa-black);
+  border-radius: 2px;
+}
+.popart ::-webkit-scrollbar-thumb:hover {
+  background: var(--pa-yellow);
+}
+
+/* ===== Selección ===== */
+.popart ::selection {
+  background: var(--pa-yellow);
+  color: var(--pa-black);
+}
+
+/* ===== Disabled ===== */
+.popart button:disabled {
+  background: #ccc !important;
+  color: #666 !important;
+  box-shadow: var(--pa-shadow-sm) !important;
+  border: 2px solid var(--pa-black) !important;
+  transform: none !important;
+}
+
+/* ===== Footer ===== */
+.popart footer {
+  font-family: 'Bowlby One', sans-serif !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}

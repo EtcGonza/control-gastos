@@ -1,0 +1,489 @@
+/* ============================================================
+ * VAPORWAVE THEME
+ * Se activa cuando <html> tiene la clase `.vaporwave`.
+ * Paleta pastel rosa / cian / lavanda con vibe 90s mall + arte
+ * digital incipiente. Glow más soft que synthwave. Fuentes
+ * serif para títulos (Playfair Display) y serif italic para
+ * matices.
+ * ============================================================ */
+
+.vaporwave {
+  --vw-pink:        #ff71ce;
+  --vw-pink-soft:   #ffaedc;
+  --vw-cyan:        #01cdfe;
+  --vw-cyan-soft:   #b9f0ff;
+  --vw-lavender:    #b967ff;
+  --vw-yellow:      #fffb96;
+  --vw-peach:       #ffd6e0;
+
+  --vw-bg-1:        #ffe0f0;
+  --vw-bg-2:        #ffd2ea;
+  --vw-bg-3:        #d7e3ff;
+
+  --vw-card:        rgba(255, 255, 255, 0.55);
+  --vw-card-edge:   rgba(185, 103, 255, 0.35);
+
+  --vw-text:        #4a1e6b;
+  --vw-text-dim:    #7f4ea7;
+  --vw-text-faint:  #b08ad1;
+}
+
+/* ===== Fondo: gradiente pastel + cuadrícula sutil ===== */
+.vaporwave body {
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 30%, rgba(1, 205, 254, 0.35), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 70%, rgba(255, 113, 206, 0.35), transparent 60%),
+    linear-gradient(135deg,
+      #ffe0f0 0%,
+      #ffd2ea 30%,
+      #f3d9ff 60%,
+      #d7e3ff 100%
+    ) fixed !important;
+  color: var(--vw-text) !important;
+  font-family: 'Playfair Display', 'Times New Roman', serif !important;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Patrón cuadriculado sutil tipo "windows 95 fondo" */
+.vaporwave body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(185, 103, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(185, 103, 255, 0.08) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Resplandor de "estatua" en la esquina superior izquierda (orna) */
+.vaporwave body::after {
+  content: '';
+  position: fixed;
+  top: -100px;
+  right: -100px;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(255, 251, 150, 0.4), transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.vaporwave app-root {
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== Tipografía ===== */
+.vaporwave h1, .vaporwave h2, .vaporwave h3 {
+  font-family: 'Playfair Display', 'Times New Roman', serif !important;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.vaporwave .text-2xl,
+.vaporwave .text-lg {
+  text-shadow:
+    1px 1px 0 var(--vw-cyan-soft),
+    -1px -1px 0 var(--vw-pink-soft),
+    0 0 12px rgba(185, 103, 255, 0.3);
+}
+.vaporwave .text-2xl.font-bold {
+  font-family: 'Playfair Display', serif !important;
+  font-style: italic;
+  font-weight: 900;
+}
+
+/* ===== Cards (glass rosáceo) ===== */
+.vaporwave .bg-white {
+  background: var(--vw-card) !important;
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  border-color: var(--vw-card-edge) !important;
+  box-shadow:
+    0 4px 24px rgba(185, 103, 255, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 -1px 0 rgba(255, 113, 206, 0.2) !important;
+  position: relative;
+  z-index: 1;
+}
+.vaporwave .bg-white\/70 {
+  background: rgba(255, 224, 240, 0.65) !important;
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+}
+
+/* Cards al hover de info-tooltip suben arriba */
+.vaporwave .bg-white:has(.info-badge:hover),
+.vaporwave .bg-white:has(.info-badge.active),
+.vaporwave .bg-white:has(.tooltip.visible),
+.vaporwave .group.bg-white:hover {
+  z-index: 50 !important;
+}
+
+/* ===== Colores de texto ===== */
+.vaporwave .text-slate-800 { color: var(--vw-text) !important; }
+.vaporwave .text-slate-700 { color: var(--vw-text) !important; }
+.vaporwave .text-slate-600 { color: var(--vw-text-dim) !important; }
+.vaporwave .text-slate-500 { color: var(--vw-text-dim) !important; }
+.vaporwave .text-slate-400 { color: var(--vw-text-faint) !important; }
+.vaporwave .text-slate-300 { color: rgba(176, 138, 209, 0.5) !important; }
+.vaporwave .text-slate-200 { color: var(--vw-text) !important; }
+
+/* Acentos semánticos */
+.vaporwave .text-rose-600,
+.vaporwave .text-rose-500 {
+  color: #d63384 !important;
+  text-shadow: 0 0 6px rgba(255, 113, 206, 0.4);
+}
+.vaporwave .text-emerald-600,
+.vaporwave .text-emerald-700,
+.vaporwave .text-emerald-900 {
+  color: #00a0b8 !important;
+  text-shadow: 0 0 6px rgba(1, 205, 254, 0.4);
+}
+.vaporwave .text-indigo-600,
+.vaporwave .text-indigo-700,
+.vaporwave .text-indigo-900 {
+  color: var(--vw-lavender) !important;
+}
+.vaporwave .text-purple-600,
+.vaporwave .text-purple-700 {
+  color: var(--vw-lavender) !important;
+}
+.vaporwave .text-pink-600,
+.vaporwave .text-pink-700 {
+  color: var(--vw-pink) !important;
+}
+.vaporwave .text-amber-600,
+.vaporwave .text-amber-700,
+.vaporwave .text-amber-800,
+.vaporwave .text-amber-900 {
+  color: #d4a017 !important;
+}
+
+/* ===== Bordes ===== */
+.vaporwave .border-slate-100,
+.vaporwave .border-slate-200,
+.vaporwave .border-slate-300 {
+  border-color: rgba(185, 103, 255, 0.25) !important;
+}
+.vaporwave .divide-slate-100 > * + * {
+  border-color: rgba(185, 103, 255, 0.2) !important;
+}
+
+/* ===== Fondos auxiliares ===== */
+.vaporwave .bg-slate-50 {
+  background: rgba(255, 255, 255, 0.4) !important;
+}
+.vaporwave .bg-slate-100 {
+  background: rgba(255, 255, 255, 0.55) !important;
+}
+.vaporwave .hover\:bg-slate-50:hover {
+  background: rgba(255, 113, 206, 0.12) !important;
+}
+.vaporwave .hover\:bg-slate-100:hover {
+  background: rgba(255, 113, 206, 0.18) !important;
+}
+.vaporwave .hover\:bg-slate-200:hover {
+  background: rgba(185, 103, 255, 0.22) !important;
+}
+
+/* ===== Badges con bg pastel ===== */
+.vaporwave [class*="bg-emerald-50"],
+.vaporwave [class*="bg-emerald-100"] {
+  background: rgba(1, 205, 254, 0.2) !important;
+  border: 1px solid rgba(1, 205, 254, 0.4);
+}
+.vaporwave [class*="bg-rose-50"],
+.vaporwave [class*="bg-rose-100"] {
+  background: rgba(255, 113, 206, 0.2) !important;
+  border: 1px solid rgba(255, 113, 206, 0.4);
+}
+.vaporwave [class*="bg-indigo-50"],
+.vaporwave [class*="bg-indigo-100"] {
+  background: rgba(185, 103, 255, 0.18) !important;
+  border: 1px solid rgba(185, 103, 255, 0.4);
+}
+.vaporwave [class*="bg-purple-50"],
+.vaporwave [class*="bg-purple-100"] {
+  background: rgba(185, 103, 255, 0.18) !important;
+  border: 1px solid rgba(185, 103, 255, 0.4);
+}
+.vaporwave [class*="bg-pink-50"],
+.vaporwave [class*="bg-pink-100"] {
+  background: rgba(255, 113, 206, 0.2) !important;
+  border: 1px solid rgba(255, 113, 206, 0.4);
+}
+.vaporwave [class*="bg-amber-50"],
+.vaporwave [class*="bg-amber-100"] {
+  background: rgba(255, 251, 150, 0.35) !important;
+  border: 1px solid rgba(212, 160, 23, 0.3);
+}
+.vaporwave [class*="bg-teal-50"] {
+  background: rgba(1, 205, 254, 0.15) !important;
+  border: 1px solid rgba(1, 205, 254, 0.35);
+}
+
+/* ===== Botones primarios ===== */
+.vaporwave button.bg-indigo-600,
+.vaporwave button.bg-rose-600,
+.vaporwave button.bg-emerald-600,
+.vaporwave button.bg-purple-600,
+.vaporwave button.bg-pink-600,
+.vaporwave button.bg-blue-600,
+.vaporwave button.bg-orange-500,
+.vaporwave button.bg-slate-700 {
+  background: linear-gradient(135deg, var(--vw-pink), var(--vw-lavender)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: white !important;
+  text-shadow: 0 1px 3px rgba(74, 30, 107, 0.4);
+  box-shadow:
+    0 4px 12px rgba(255, 113, 206, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.vaporwave button.bg-emerald-600,
+.vaporwave button.bg-blue-600 {
+  background: linear-gradient(135deg, var(--vw-cyan), var(--vw-lavender)) !important;
+  box-shadow:
+    0 4px 12px rgba(1, 205, 254, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.vaporwave button.bg-purple-600,
+.vaporwave button.bg-orange-500 {
+  background: linear-gradient(135deg, var(--vw-lavender), var(--vw-pink)) !important;
+}
+
+/* Hover */
+.vaporwave button.bg-indigo-600:hover,
+.vaporwave button.bg-rose-600:hover,
+.vaporwave button.bg-pink-600:hover,
+.vaporwave button.bg-slate-700:hover {
+  filter: brightness(1.1) saturate(1.2);
+  box-shadow:
+    0 6px 20px rgba(255, 113, 206, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+.vaporwave button.bg-emerald-600:hover,
+.vaporwave button.bg-blue-600:hover {
+  filter: brightness(1.1) saturate(1.2);
+  box-shadow:
+    0 6px 20px rgba(1, 205, 254, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Botones secundarios (slate-100) */
+.vaporwave button.bg-slate-100 {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border: 1px solid var(--vw-card-edge) !important;
+  color: var(--vw-text) !important;
+}
+
+/* ===== Icon badges (los círculos coloreados a la izquierda de cada card) ===== */
+.vaporwave span.bg-indigo-100,
+.vaporwave span.bg-purple-100,
+.vaporwave span.bg-pink-100,
+.vaporwave span.bg-rose-100,
+.vaporwave span.bg-emerald-100,
+.vaporwave span.bg-amber-100,
+.vaporwave span.bg-slate-100 {
+  background: linear-gradient(135deg, var(--vw-pink-soft), var(--vw-cyan-soft)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 2px 6px rgba(185, 103, 255, 0.3);
+}
+.vaporwave span.bg-emerald-100 {
+  background: linear-gradient(135deg, var(--vw-cyan-soft), var(--vw-yellow)) !important;
+}
+.vaporwave span.bg-amber-100 {
+  background: linear-gradient(135deg, var(--vw-yellow), var(--vw-peach)) !important;
+}
+
+/* Header icon */
+.vaporwave span.bg-gradient-to-br.from-indigo-500.to-purple-600 {
+  background: linear-gradient(135deg, var(--vw-pink), var(--vw-cyan), var(--vw-lavender)) !important;
+  box-shadow: 0 4px 16px rgba(255, 113, 206, 0.5);
+}
+
+/* ===== Inputs ===== */
+.vaporwave input[type="text"],
+.vaporwave input[type="number"],
+.vaporwave input[type="date"],
+.vaporwave input[type="month"],
+.vaporwave select {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border-color: rgba(185, 103, 255, 0.35) !important;
+  color: var(--vw-text) !important;
+  font-family: 'Playfair Display', serif !important;
+}
+.vaporwave input::placeholder {
+  color: var(--vw-text-faint) !important;
+  font-style: italic;
+}
+.vaporwave input:focus,
+.vaporwave select:focus {
+  border-color: var(--vw-lavender) !important;
+  box-shadow: 0 0 0 3px rgba(185, 103, 255, 0.2), 0 0 8px rgba(255, 113, 206, 0.3) !important;
+  outline: none !important;
+}
+.vaporwave input[type="checkbox"] {
+  accent-color: var(--vw-pink);
+}
+
+/* ===== Tabs activos ===== */
+.vaporwave .bg-slate-100 button.bg-white {
+  background: linear-gradient(135deg, var(--vw-pink-soft), var(--vw-cyan-soft)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 2px 6px rgba(185, 103, 255, 0.2);
+}
+
+/* ===== Header ===== */
+.vaporwave header.bg-white\/70 {
+  background:
+    linear-gradient(90deg,
+      rgba(255, 224, 240, 0.85) 0%,
+      rgba(243, 217, 255, 0.85) 50%,
+      rgba(215, 227, 255, 0.85) 100%
+    ) !important;
+  border-bottom: 1px solid var(--vw-pink) !important;
+  box-shadow: 0 2px 16px rgba(255, 113, 206, 0.3) !important;
+}
+
+/* ===== SVG icons ===== */
+.vaporwave svg {
+  filter: drop-shadow(0 1px 2px rgba(185, 103, 255, 0.3));
+}
+
+/* ===== Modal ===== */
+.vaporwave .overlay {
+  background: rgba(74, 30, 107, 0.3) !important;
+  backdrop-filter: blur(8px) saturate(1.4);
+}
+.vaporwave .modal {
+  background: linear-gradient(135deg, var(--vw-bg-1) 0%, var(--vw-bg-3) 100%) !important;
+  border: 1px solid var(--vw-pink) !important;
+  box-shadow:
+    0 24px 48px rgba(185, 103, 255, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
+}
+
+/* ===== Tooltips ===== */
+.vaporwave .tooltip {
+  background: linear-gradient(135deg, rgba(74, 30, 107, 0.95), rgba(135, 60, 180, 0.95)) !important;
+  border: 1px solid var(--vw-pink) !important;
+  box-shadow: 0 8px 24px rgba(185, 103, 255, 0.5) !important;
+  color: var(--vw-pink-soft) !important;
+}
+.vaporwave .tooltip::before {
+  background: rgba(74, 30, 107, 0.95) !important;
+  border-top: 1px solid var(--vw-pink);
+  border-left: 1px solid var(--vw-pink);
+}
+.vaporwave .info-badge {
+  background: linear-gradient(135deg, var(--vw-pink-soft), var(--vw-cyan-soft)) !important;
+  color: var(--vw-text) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+.vaporwave .info-badge:hover,
+.vaporwave .info-badge.active {
+  background: linear-gradient(135deg, var(--vw-pink), var(--vw-lavender)) !important;
+  color: white !important;
+}
+
+/* ===== Theme picker button ===== */
+.vaporwave .theme-picker-btn {
+  background: rgba(255, 255, 255, 0.6) !important;
+  border-color: var(--vw-pink) !important;
+  color: var(--vw-lavender) !important;
+}
+.vaporwave .theme-picker-btn:hover {
+  background: rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 0 12px rgba(255, 113, 206, 0.4);
+}
+
+/* ===== Barras de progreso ===== */
+.vaporwave .bg-emerald-500 {
+  background: linear-gradient(90deg, var(--vw-cyan), var(--vw-cyan-soft)) !important;
+}
+.vaporwave .bg-amber-500 {
+  background: linear-gradient(90deg, var(--vw-yellow), var(--vw-peach)) !important;
+}
+.vaporwave .bg-rose-500 {
+  background: linear-gradient(90deg, var(--vw-pink), var(--vw-lavender)) !important;
+}
+.vaporwave .bg-indigo-600 {
+  background: linear-gradient(90deg, var(--vw-lavender), var(--vw-pink)) !important;
+}
+
+/* ===== Switch toggle ===== */
+.vaporwave button[role="switch"].bg-indigo-600 {
+  background: linear-gradient(90deg, var(--vw-pink), var(--vw-lavender)) !important;
+}
+.vaporwave button[role="switch"].bg-slate-300 {
+  background: rgba(176, 138, 209, 0.3) !important;
+}
+
+/* ===== Paneles gradient (USD summary) ===== */
+.vaporwave div[class*="from-emerald-50"][class*="to-teal-50"] {
+  background: linear-gradient(90deg,
+    rgba(1, 205, 254, 0.18),
+    rgba(255, 251, 150, 0.18)
+  ) !important;
+  border: 1px solid var(--vw-cyan) !important;
+}
+.vaporwave div[class*="from-indigo-50"][class*="to-blue-50"] {
+  background: linear-gradient(90deg,
+    rgba(185, 103, 255, 0.18),
+    rgba(1, 205, 254, 0.18)
+  ) !important;
+  border: 1px solid var(--vw-lavender) !important;
+}
+
+/* Amber panel (cambio de cierre) */
+.vaporwave div[class*="bg-amber-50"][class*="border-amber-200"] {
+  background: rgba(255, 251, 150, 0.4) !important;
+  border: 1px solid #e0c040 !important;
+}
+
+/* ===== Scrollbar custom ===== */
+.vaporwave ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.vaporwave ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.4);
+}
+.vaporwave ::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, var(--vw-pink), var(--vw-lavender));
+  border-radius: 5px;
+}
+
+/* ===== Selección ===== */
+.vaporwave ::selection {
+  background: var(--vw-pink);
+  color: white;
+}
+
+/* ===== Disabled ===== */
+.vaporwave button:disabled {
+  opacity: 0.5 !important;
+  filter: grayscale(0.4);
+}
+
+/* ===== Animación suave del ícono del header ===== */
+@keyframes vw-shimmer {
+  0%, 100% { filter: hue-rotate(0deg) brightness(1); }
+  50%      { filter: hue-rotate(20deg) brightness(1.1); }
+}
+.vaporwave header span.bg-gradient-to-br {
+  animation: vw-shimmer 4s ease-in-out infinite;
+}
+
+/* ===== Categoría color circles ===== */
+.vaporwave [style*="background-color"] {
+  filter: saturate(0.7) brightness(1.1);
+  box-shadow: 0 2px 4px rgba(185, 103, 255, 0.2);
+}
