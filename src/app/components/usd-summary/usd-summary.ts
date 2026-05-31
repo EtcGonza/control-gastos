@@ -1,0 +1,61 @@
+import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import { TransactionsService } from '../../services/transactions.service';
+
+@Component({
+  selector: 'app-usd-summary',
+  imports: [CommonModule],
+  template: `
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Cuotas USD que sí se convirtieron a ARS -->
+      @if (tx.monthlyConvertedFromUSD() > 0) {
+        <div class="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-2xl p-4 flex items-center gap-3">
+          <span class="w-10 h-10 rounded-xl bg-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+            USD→{{ '$' }}
+          </span>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-medium text-indigo-700">Cuotas USD convertidas a pesos</p>
+            <p class="text-lg font-bold text-indigo-900">
+              ≈ {{ '$' }}{{ tx.monthlyConvertedFromUSD() | number:'1.2-2' }}
+            </p>
+            <p class="text-[11px] text-indigo-600/70 mt-0.5">
+              @if (latest(); as lr) {
+                Al TC oficial vendedor (último conocido: {{ '$' }}{{ lr.rate | number:'1.2-2' }} del {{ lr.date | date:'dd/MM' }})
+              } @else {
+                Cargando cotización…
+              }
+            </p>
+          </div>
+        </div>
+      }
+
+      <!-- USD a pagar directamente (sin convertir) -->
+      @if (tx.monthlyExpensesUSD() > 0) {
+        <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3">
+          <span class="w-10 h-10 rounded-xl bg-emerald-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+            USD
+          </span>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-medium text-emerald-700">A pagar directamente en USD</p>
+            <p class="text-lg font-bold text-emerald-900">
+              US{{ '$' }} {{ tx.monthlyExpensesUSD() | number:'1.2-2' }}
+              <span class="text-xs text-emerald-700 font-normal ml-1">
+                ({{ tx.monthlyInstallmentsUSDCount() }} {{ tx.monthlyInstallmentsUSDCount() === 1 ? 'cuota' : 'cuotas' }})
+              </span>
+            </p>
+            <p class="text-[11px] text-emerald-600/70 mt-0.5">
+              Cuotas marcadas como "pago el resumen en USD".
+            </p>
+          </div>
+        </div>
+      }
+    </div>
+  `,
+})
+export class UsdSummary {
+  protected readonly tx = inject(TransactionsService);
+
+  latest() {
+    return this.tx.latestRate();
+  }
+}
