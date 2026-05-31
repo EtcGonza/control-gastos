@@ -12,6 +12,21 @@ const PURCHASES_KEY = 'control-gastos:purchases';
 const SUBS_KEY = 'control-gastos:subscriptions';
 const RATES_KEY = 'control-gastos:rates';
 
+/** Estructura del archivo de exportación de datos (respaldo). */
+export interface ExportFile {
+  app: 'control-gastos';
+  schemaVersion: number;
+  exportedAt: string;
+  data: {
+    transactions: Transaction[];
+    templates: RecurringTemplate[];
+    cards: CreditCard[];
+    purchases: CardPurchase[];
+    subscriptions: Subscription[];
+    rates: Record<string, number>;
+  };
+}
+
 /** Detalle de conversión USD → ARS para una entrada mensual. */
 export interface UsdConversion {
   /** Fecha de cierre del resumen en que se aplica el TC: ISO YYYY-MM-DD. */
@@ -744,6 +759,114 @@ export class TransactionsService {
   setManualRate(date: string, rate: number): void {
     this._rates.update((r) => ({ ...r, [date]: rate }));
     this.persist(RATES_KEY, this._rates());
+  }
+
+  // ============================================================
+  // Export / Import / Reset
+  // ============================================================
+
+  /** Conteo de cada entidad — útil para mostrar resúmenes. */
+  dataCounts(): {
+    transactions: number;
+    templates: number;
+    cards: number;
+    purchases: number;
+    subscriptions: number;
+    rates: number;
+  } {
+    return {
+      transactions: this._transactions().length,
+      templates: this._templates().length,
+      cards: this._cards().length,
+      purchases: this._purchases().length,
+      subscriptions: this._subscriptions().length,
+      rates: Object.keys(this._rates()).length,
+    };
+  }
+
+  /** Snapshot serializable de todos los datos (todas las entidades, sin UI). */
+  exportData(): ExportFile {
+    return {
+      app: 'control-gastos',
+      schemaVersion: 1,
+      exportedAt: new Date().toISOString(),
+      data: {
+        transactions: this._transactions(),
+        templates: this._templates(),
+        cards: this._cards(),
+        purchases: this._purchases(),
+        subscriptions: this._subscriptions(),
+        rates: this._rates(),
+      },
+    };
+  }
+
+  /**
+   * Reemplaza todos los datos por los del archivo importado. Asume que el
+   * archivo ya fue validado con `validateImportFile`.
+   */
+  importData(file: ExportFile): void {
+    const d = file.data;
+    this._transactions.set(Array.isArray(d.transactions) ? d.transactions : []);
+    this._templates.set(Array.isArray(d.templates) ? d.templates : []);
+    this._cards.set(Array.isArray(d.cards) ? d.cards : []);
+    this._purchases.set(Array.isArray(d.purchases) ? d.purchases : []);
+    this._subscriptions.set(Array.isArray(d.subscriptions) ? d.subscriptions : []);
+    this._rates.set(
+      d.rates && typeof d.rates === 'object' && !Array.isArray(d.rates)
+        ? d.rates
+        : {}
+    );
+
+    this.persist(STORAGE_KEY, this._transactions());
+    this.persist(TEMPLATES_KEY, this._templates());
+    this.persist(CARDS_KEY, this._cards());
+    this.persist(PURCHASES_KEY, this._purchases());
+    this.persist(SUBS_KEY, this._subscriptions());
+    this.persist(RATES_KEY, this._rates());
+  }
+
+  /**
+   * Valida que un objeto desconocido tenga la forma de un export válido.
+   * Devuelve el archivo tipado o un mensaje de error.
+   */
+  validateImportFile(raw: unknown): { ok: true; file: ExportFile } | { ok: false; error: string } {
+    if (!raw || typeof raw !== 'object') {
+      return { ok: false, error: 'El archivo no contiene un JSON con la estructura esperada.' };
+    }
+    const obj = raw as Record<string, unknown>;
+    if (obj['app'] !== 'control-gastos') {
+      return { ok: false, error: 'El archivo no parece ser un respaldo de Control de Gastos.' };
+    }
+    if (typeof obj['schemaVersion'] !== 'number') {
+      return { ok: false, error: 'Falta o es inválido el campo schemaVersion.' };
+    }
+    if (obj['schemaVersion'] > 1) {
+      return {
+        ok: false,
+        error: `El archivo fue creado con una versión más nueva (v${obj['schemaVersion']}). Actualizá la app para importarlo.`,
+      };
+    }
+    if (!obj['data'] || typeof obj['data'] !== 'object') {
+      return { ok: false, error: 'Falta la sección "data" en el archivo.' };
+    }
+    return { ok: true, file: raw as ExportFile };
+  }
+
+  /** Borra todos los datos persistidos (sin tocar la UI state). */
+  clearAllData(): void {
+    this._transactions.set([]);
+    this._templates.set([]);
+    this._cards.set([]);
+    this._purchases.set([]);
+    this._subscriptions.set([]);
+    this._rates.set({});
+    this.persist(STORAGE_KEY, []);
+    this.persist(TEMPLATES_KEY, []);
+    this.persist(CARDS_KEY, []);
+    this.persist(PURCHASES_KEY, []);
+    this.persist(SUBS_KEY, []);
+    this.persist(RATES_KEY, {});
   }
 
   private loadRates(): Record<string, number> {

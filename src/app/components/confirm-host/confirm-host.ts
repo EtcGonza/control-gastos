@@ -42,10 +42,12 @@ import { ConfirmService } from '../../services/confirm.service';
             </button>
           </div>
           <div class="flex justify-end gap-2">
-            <button type="button" (click)="cancel()"
-                    class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
-              {{ s.options.cancelText ?? 'Cancelar' }}
-            </button>
+            @if (!s.options.hideCancel) {
+              <button type="button" (click)="cancel()"
+                      class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
+                {{ s.options.cancelText ?? 'Cancelar' }}
+              </button>
+            }
             <button type="button" (click)="confirm()"
                     class="px-4 py-2 rounded-xl text-sm font-semibold text-white transition"
                     [ngClass]="s.options.variant === 'danger'

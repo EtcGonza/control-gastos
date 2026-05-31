@@ -15,7 +15,6 @@ body {
 /*
  * Los componentes Angular se renderizan como `inline` por default; eso hace
  * que las utilidades `space-y-*` (margin-top) no apliquen entre ellos.
- * Forzamos display:block para que el espaciado del grid funcione.
  */
 app-summary-cards,
 app-usd-summary,
@@ -25,7 +24,8 @@ app-subscriptions-manager,
 app-category-breakdown,
 app-recurring-templates,
 app-transaction-list,
-app-month-selector {
+app-month-selector,
+app-data-backup {
   display: block;
 }
 

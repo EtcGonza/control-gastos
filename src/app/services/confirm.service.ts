@@ -8,6 +8,8 @@ export interface ConfirmOptions {
   confirmText?: string;
   cancelText?: string;
   variant?: ConfirmVariant;
+  /** Si es true, oculta el botón Cancelar (modal informativo). */
+  hideCancel?: boolean;
 }
 
 interface ConfirmState {
@@ -20,6 +22,15 @@ export class ConfirmService {
   readonly state = this._state.asReadonly();
 
   private resolver: ((v: boolean) => void) | null = null;
+
+  /** Atajo para mostrar un mensaje informativo con un solo botón. */
+  alert(options: Omit<ConfirmOptions, 'hideCancel' | 'cancelText'>): Promise<void> {
+    return this.confirm({
+      ...options,
+      confirmText: options.confirmText ?? 'Entendido',
+      hideCancel: true,
+    }).then(() => undefined);
+  }
 
   /** Abre el modal. Devuelve una Promise que se resuelve cuando el usuario decide. */
   confirm(options: ConfirmOptions): Promise<boolean> {

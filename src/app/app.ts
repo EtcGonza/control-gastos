@@ -3,6 +3,7 @@ import { Component, inject } from '@angular/core';
 import { CardsManager } from './components/cards-manager/cards-manager';
 import { CategoryBreakdown } from './components/category-breakdown/category-breakdown';
 import { ConfirmHost } from './components/confirm-host/confirm-host';
+import { DataBackup } from './components/data-backup/data-backup';
 import { MonthSelector } from './components/month-selector/month-selector';
 import { RecurringTemplates } from './components/recurring-templates/recurring-templates';
 import { SubscriptionsManager } from './components/subscriptions-manager/subscriptions-manager';
@@ -25,6 +26,7 @@ import { TransactionsService } from './services/transactions.service';
     CardsManager,
     SubscriptionsManager,
     UsdSummary,
+    DataBackup,
     ConfirmHost,
   ],
   templateUrl: './app.html',
