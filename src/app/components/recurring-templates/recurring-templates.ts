@@ -44,7 +44,7 @@ import { TransactionsService } from '../../services/transactions.service';
         </div>
       } @else {
         <!-- Tabs ingreso / gasto -->
-        <div class="flex gap-1 mb-3 bg-slate-100 p-1 rounded-xl text-xs font-medium">
+        <div class="flex gap-1 mb-2 bg-slate-100 p-1 rounded-xl text-xs font-medium">
           <button type="button" (click)="filter.set('todos')"
                   class="flex-1 py-1.5 rounded-lg transition"
                   [ngClass]="filter() === 'todos' ? 'bg-white shadow text-slate-700' : 'text-slate-500'">
@@ -61,6 +61,24 @@ import { TransactionsService } from '../../services/transactions.service';
             Ingresos
           </button>
         </div>
+
+        <!-- Toggle: ocultar ya cargados este mes -->
+        <label class="flex items-center justify-between gap-2 mb-3 px-1 py-2 cursor-pointer select-none">
+          <span class="text-xs text-slate-600">
+            Ocultar los ya cargados este mes
+            @if (appliedCount() > 0) {
+              <span class="text-slate-400">({{ appliedCount() }})</span>
+            }
+          </span>
+          <button type="button" role="switch"
+                  [attr.aria-checked]="hideApplied()"
+                  (click)="toggleHideApplied()"
+                  class="relative inline-flex h-5 w-9 items-center rounded-full transition"
+                  [ngClass]="hideApplied() ? 'bg-indigo-600' : 'bg-slate-300'">
+            <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition"
+                  [ngClass]="hideApplied() ? 'translate-x-5' : 'translate-x-1'"></span>
+          </button>
+        </label>
 
         <ul class="space-y-2">
           @for (t of filtered(); track t.id) {
@@ -141,11 +159,31 @@ export class RecurringTemplates {
   protected readonly tx = inject(TransactionsService);
 
   private readonly EXPANDED_KEY = 'control-gastos:templates-expanded';
+  private readonly HIDE_APPLIED_KEY = 'control-gastos:templates-hide-applied';
 
   protected readonly filter = signal<'todos' | 'gasto' | 'ingreso'>('todos');
   protected readonly editingId = signal<string | null>(null);
   protected readonly expanded = signal<boolean>(this.loadExpanded());
+  protected readonly hideApplied = signal<boolean>(this.loadHideApplied());
   protected editAmount: number | null = null;
+
+  /** Cantidad de plantillas que ya están aplicadas en el mes seleccionado. */
+  protected readonly appliedCount = computed(
+    () => this.tx.templates().filter((t) => this.tx.isTemplateAppliedThisMonth(t)).length
+  );
+
+  toggleHideApplied(): void {
+    this.hideApplied.update((v) => !v);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(this.HIDE_APPLIED_KEY, String(this.hideApplied()));
+    }
+  }
+
+  private loadHideApplied(): boolean {
+    if (typeof localStorage === 'undefined') return false;
+    const v = localStorage.getItem(this.HIDE_APPLIED_KEY);
+    return v === null ? false : v === 'true';
+  }
 
   toggleExpanded(): void {
     this.expanded.update((v) => !v);
@@ -162,9 +200,11 @@ export class RecurringTemplates {
 
   protected readonly filtered = computed(() => {
     const f = this.filter();
-    const list = this.tx.templates();
-    if (f === 'todos') return list;
-    return list.filter((t) => t.type === f);
+    const hide = this.hideApplied();
+    let list = this.tx.templates();
+    if (f !== 'todos') list = list.filter((t) => t.type === f);
+    if (hide) list = list.filter((t) => !this.tx.isTemplateAppliedThisMonth(t));
+    return list;
   });
 
   protected readonly monthLabel = computed(() => {
