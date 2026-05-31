@@ -179,7 +179,7 @@ export class TransactionsService {
           ? this.buildConversion(closingDate, s.surchargeMode)
           : undefined;
       return {
-        id: `sub-${s.subscriptionId}-${month}`,
+        id: `sub-${s.subscriptionId}-${s.chargeDate}`,
         source: 'subscription',
         type: 'gasto',
         description: s.description,
@@ -558,9 +558,14 @@ export class TransactionsService {
   /**
    * Primer mes (YYYY-MM) en que se va a cobrar una compra.
    *
-   * Regla: si la fecha de compra es ESTRICTAMENTE menor al día de cierre del
-   * mes de compra, esa compra cierra ese mismo mes → se cobra al mes siguiente.
-   * Si la compra es en el día del cierre o posterior, pasa al período siguiente.
+   * Regla: si la fecha de compra es ESTRICTAMENTE menor al día EFECTIVO de
+   * cierre del mes de compra, esa compra cierra ese mismo mes → se cobra al
+   * mes siguiente. Si la compra es en el día del cierre o posterior, pasa al
+   * período siguiente.
+   *
+   * El día efectivo de cierre se calcula clampeando al último día del mes:
+   * si el cierre es el 30 pero el mes es febrero, el cierre efectivo es 28
+   * (o 29 en años bisiestos).
    */
   firstBillingMonth(purchaseDate: string, closingDay: number): string {
     const [yStr, mStr, dStr] = purchaseDate.split('-');
@@ -568,8 +573,12 @@ export class TransactionsService {
     const m = Number(mStr); // 1-12
     const d = Number(dStr);
 
+    // Día efectivo de cierre en el mes de la compra
+    const lastDayOfMonth = new Date(y, m, 0).getDate();
+    const effectiveClosingDay = Math.min(closingDay, lastDayOfMonth);
+
     // offset en meses respecto al mes de compra
-    const offset = d < closingDay ? 1 : 2;
+    const offset = d < effectiveClosingDay ? 1 : 2;
     const targetMonth0 = m - 1 + offset; // 0-based, puede pasar 11
     const targetDate = new Date(y, targetMonth0, 1);
     return `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}`;
@@ -1015,33 +1024,42 @@ export class TransactionsService {
 
       const chargeDay = Number(sub.startDate.split('-')[2]);
       const closingDay = sub.closingDaySnapshot ?? card.closingDay;
-      const offset = chargeDay < closingDay ? 1 : 2;
-
-      // Mes fuente del cobro: month - offset
       const [mY, mM] = month.split('-').map(Number);
-      const source = new Date(mY, mM - 1 - offset, 1);
-      const sY = source.getFullYear();
-      const sM0 = source.getMonth(); // 0-11
 
-      // Día real de cobro en el mes fuente (ajustado al último día si no existe)
-      const lastDay = new Date(sY, sM0 + 1, 0).getDate();
-      const day = Math.min(chargeDay, lastDay);
-      const chargeDate = `${sY}-${String(sM0 + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      // Una suscripción puede aparecer en `month` desde dos meses fuente
+      // distintos (M-1 con offset 1, ó M-2 con offset 2). Hay que evaluar
+      // ambos por separado porque los días pueden clampearse en cada mes
+      // (ej. cierre 30, febrero → 28).
+      for (const offsetTry of [1, 2]) {
+        const sourceDate = new Date(mY, mM - 1 - offsetTry, 1);
+        const sY = sourceDate.getFullYear();
+        const sM = sourceDate.getMonth() + 1; // 1-12
 
-      // ¿La suscripción está activa en chargeDate?
-      if (chargeDate < sub.startDate) continue;
-      if (sub.cancelDate && sub.cancelDate < chargeDate) continue;
+        const lastDay = new Date(sY, sM, 0).getDate();
+        const effChargeDay = Math.min(chargeDay, lastDay);
+        const effCloseDay = Math.min(closingDay, lastDay);
 
-      result.push({
-        subscriptionId: sub.id,
-        description: sub.description,
-        cardLabel: this.cardLabel(card),
-        amount: this.priceForDate(sub, chargeDate),
-        currency: sub.currency,
-        chargeDate,
-        closingDayForBill: closingDay,
-        surchargeMode: sub.surchargeMode,
-      });
+        // Offset real para este mes fuente, usando los días efectivos.
+        const actualOffset = effChargeDay < effCloseDay ? 1 : 2;
+        if (actualOffset !== offsetTry) continue;
+
+        const chargeDate = `${sY}-${String(sM).padStart(2, '0')}-${String(effChargeDay).padStart(2, '0')}`;
+
+        // ¿La suscripción está activa en chargeDate?
+        if (chargeDate < sub.startDate) continue;
+        if (sub.cancelDate && sub.cancelDate < chargeDate) continue;
+
+        result.push({
+          subscriptionId: sub.id,
+          description: sub.description,
+          cardLabel: this.cardLabel(card),
+          amount: this.priceForDate(sub, chargeDate),
+          currency: sub.currency,
+          chargeDate,
+          closingDayForBill: closingDay,
+          surchargeMode: sub.surchargeMode,
+        });
+      }
     }
 
     return result;
