@@ -214,6 +214,8 @@ export class DataBackup {
       purchases: Array.isArray(d.purchases) ? d.purchases.length : 0,
       subscriptions: Array.isArray(d.subscriptions) ? d.subscriptions.length : 0,
       rates: d.rates && typeof d.rates === 'object' ? Object.keys(d.rates).length : 0,
+      customCategories: Array.isArray(d.customCategories) ? d.customCategories.length : 0,
+      savings: Array.isArray(d.savings) ? d.savings.length : 0,
     };
   }
 
@@ -224,6 +226,8 @@ export class DataBackup {
     purchases: number;
     subscriptions: number;
     rates: number;
+    customCategories: number;
+    savings: number;
   }): string {
     return [
       `${c.transactions} movimientos manuales`,
@@ -231,6 +235,8 @@ export class DataBackup {
       `${c.cards} tarjetas`,
       `${c.purchases} compras con cuotas`,
       `${c.subscriptions} suscripciones`,
+      `${c.savings} ahorros`,
+      `${c.customCategories} categorías custom`,
       `${c.rates} cotizaciones cacheadas`,
     ].join(' · ');
   }

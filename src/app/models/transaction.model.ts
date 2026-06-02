@@ -7,7 +7,7 @@ export type ExpenseCategory =
   | 'Transporte'
   | 'Salud'
   | 'Entretenimiento'
-  | 'Suscripciones'
+  | 'Ropa'
   | 'Otros';
 
 export type IncomeCategory = 'Sueldo' | 'Horas extras' | 'Otros';
@@ -35,7 +35,7 @@ export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
   'Transporte',
   'Salud',
   'Entretenimiento',
-  'Suscripciones',
+  'Ropa',
   'Otros',
 ];
 
@@ -45,6 +45,12 @@ export const INCOME_CATEGORIES: IncomeCategory[] = [
   'Otros',
 ];
 
+/**
+ * Mapa de colores por categoría. Incluye 'Suscripciones' porque el sistema
+ * sigue usando ese nombre como categoría automática para los cobros generados
+ * desde el panel de Suscripciones (aunque el usuario ya no la puede elegir
+ * manualmente desde el formulario).
+ */
 export const CATEGORY_COLORS: Record<Category, string> = {
   Alquiler: '#6366f1',
   Servicios: '#0ea5e9',
@@ -52,6 +58,7 @@ export const CATEGORY_COLORS: Record<Category, string> = {
   Transporte: '#10b981',
   Salud: '#ef4444',
   Entretenimiento: '#ec4899',
+  Ropa: '#a855f7',
   Suscripciones: '#f97316',
   Sueldo: '#22c55e',
   'Horas extras': '#06b6d4',

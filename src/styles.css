@@ -31,8 +31,13 @@ app-month-selector,
 app-data-backup,
 app-theme-picker,
 app-analytics,
-app-categories-manager {
+app-categories-manager,
+app-savings {
   display: block;
+}
+
+app-sidebar {
+  display: contents;
 }
 
 app-info-tooltip {

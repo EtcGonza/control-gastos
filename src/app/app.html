@@ -1,59 +1,87 @@
 <app-confirm-host></app-confirm-host>
-<div class="min-h-screen">
-  <!-- Header -->
-  <header class="bg-white/70 backdrop-blur-md border-b border-slate-200 sticky top-0 z-10">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-md">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2v20"/>
-            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+
+<div class="flex min-h-screen">
+  <!-- Sidebar lateral -->
+  <app-sidebar></app-sidebar>
+
+  <!-- Main -->
+  <main class="flex-1 min-w-0 flex flex-col">
+    <!-- Header con hamburguesa (mobile) + título de sección + selector de mes -->
+    <header class="bg-white/70 backdrop-blur-md border-b border-slate-200 sticky top-0 z-20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
+        <button type="button" (click)="nav.toggleMobileMenu()"
+                class="lg:hidden w-9 h-9 rounded-xl text-slate-600 hover:bg-slate-100 flex items-center justify-center transition flex-shrink-0"
+                aria-label="Abrir menú">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
-        </span>
-        <div>
-          <h1 class="text-xl font-bold text-slate-800">Control de Gastos</h1>
-          <p class="text-xs text-slate-500">Gestioná tus ingresos y gastos mensuales</p>
+        </button>
+
+        <div class="flex-1 min-w-0">
+          <h2 class="text-lg font-bold text-slate-800 leading-tight truncate">
+            {{ sectionLabel() }}
+          </h2>
+          <p class="text-xs text-slate-500 truncate hidden sm:block">
+            {{ sectionSubtitle() }}
+          </p>
         </div>
+
+        @if (showMonthSelector()) {
+          <div class="flex-shrink-0">
+            <app-month-selector></app-month-selector>
+          </div>
+        }
       </div>
-      <div class="flex items-center gap-2">
-        <app-month-selector></app-month-selector>
-        <!-- Theme picker desactivado temporalmente para no tener que mantener
-             overrides de estilo por cada componente nuevo. Descomentar este
-             elemento y restaurar load() en ThemeService cuando se quiera
-             volver a habilitar. -->
-        <!-- <app-theme-picker></app-theme-picker> -->
-      </div>
+    </header>
+
+    <!-- Contenido según sección -->
+    <div class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
+      @switch (nav.section()) {
+
+        @case ('mes') {
+          <div class="space-y-8">
+            <app-summary-cards></app-summary-cards>
+            <app-usd-summary></app-usd-summary>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div class="lg:col-span-1 space-y-8">
+                <app-transaction-form></app-transaction-form>
+                <app-category-breakdown></app-category-breakdown>
+              </div>
+              <div class="lg:col-span-2 space-y-8">
+                <app-recurring-templates></app-recurring-templates>
+                <app-transaction-list></app-transaction-list>
+              </div>
+            </div>
+          </div>
+        }
+
+        @case ('tarjetas') {
+          <app-cards-manager></app-cards-manager>
+        }
+
+        @case ('suscripciones') {
+          <app-subscriptions-manager></app-subscriptions-manager>
+        }
+
+        @case ('ahorros') {
+          <app-savings></app-savings>
+        }
+
+        @case ('analisis') {
+          <app-analytics></app-analytics>
+        }
+
+        @case ('configuracion') {
+          <div class="space-y-6">
+            <app-categories-manager></app-categories-manager>
+            <app-data-backup></app-data-backup>
+          </div>
+        }
+
+      }
     </div>
-  </header>
-
-  <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-8">
-    <!-- Tarjetas resumen -->
-    <app-summary-cards></app-summary-cards>
-
-    <!-- Resumen USD (se oculta si no hay cuotas USD) -->
-    <app-usd-summary></app-usd-summary>
-
-    <!-- Layout principal -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Columna izquierda: Formulario, tarjetas, suscripciones y categorías -->
-      <div class="lg:col-span-1 space-y-8">
-        <app-transaction-form></app-transaction-form>
-        <app-cards-manager></app-cards-manager>
-        <app-subscriptions-manager></app-subscriptions-manager>
-        <app-categories-manager></app-categories-manager>
-        <app-category-breakdown></app-category-breakdown>
-        <app-data-backup></app-data-backup>
-      </div>
-
-      <!-- Columna derecha: Fijos guardados + Lista de movimientos -->
-      <div class="lg:col-span-2 space-y-8">
-        <app-recurring-templates></app-recurring-templates>
-        <app-transaction-list></app-transaction-list>
-      </div>
-    </div>
-
-    <!-- Análisis (ancho completo) -->
-    <app-analytics></app-analytics>
 
     <footer class="text-center text-xs text-slate-400 py-4">
       Hecho con Angular 21 y Tailwind CSS

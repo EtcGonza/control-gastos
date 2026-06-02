@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ConfirmService } from '../../services/confirm.service';
+import { NavigationService } from '../../services/navigation.service';
 import { MonthlyEntry, TransactionsService } from '../../services/transactions.service';
 
 type TypeFilter = 'all' | 'ingreso' | 'gasto';
@@ -182,19 +183,28 @@ type SortMode = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc';
                 }
               </div>
 
-              @if (t.source === 'transaction') {
-                <button type="button" (click)="tx.remove(t.id)"
-                        class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-500 transition p-1"
-                        title="Eliminar">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
-                </button>
-              } @else if (t.installment) {
-                <button type="button" (click)="removePurchase(t.installment.purchaseId)"
-                        class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-500 transition p-1"
-                        title="Eliminar la compra entera (todas las cuotas)">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
-                </button>
-              }
+              <!-- Acción contextual (siempre reserva el espacio para mantener alineación) -->
+              <div class="w-6 flex-shrink-0 flex items-center justify-center">
+                @if (t.source === 'transaction') {
+                  <button type="button" (click)="tx.remove(t.id)"
+                          class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-500 transition p-1"
+                          title="Eliminar">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                } @else if (t.installment) {
+                  <button type="button" (click)="removePurchase(t.installment.purchaseId)"
+                          class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-500 transition p-1"
+                          title="Eliminar la compra entera (todas las cuotas)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+                  </button>
+                } @else if (t.subscription) {
+                  <button type="button" (click)="goToSubscriptions()"
+                          class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-indigo-600 transition p-1"
+                          title="Ir a Suscripciones">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                  </button>
+                }
+              </div>
             </li>
           }
         </ul>
@@ -243,6 +253,7 @@ type SortMode = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc';
 export class TransactionList {
   protected readonly tx = inject(TransactionsService);
   private readonly confirmSvc = inject(ConfirmService);
+  private readonly nav = inject(NavigationService);
 
   // ============ Filtros y orden ============
   protected readonly typeFilter = signal<TypeFilter>('all');
@@ -402,6 +413,10 @@ export class TransactionList {
   arsConv(t: MonthlyEntry) {
     if (t.currency !== 'USD' || t.conversion?.usdDirect) return null;
     return this.tx.convertEntryToArs(t);
+  }
+
+  goToSubscriptions(): void {
+    this.nav.setSection('suscripciones');
   }
 
   async removePurchase(id: string): Promise<void> {
