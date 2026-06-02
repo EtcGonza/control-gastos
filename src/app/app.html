@@ -17,7 +17,11 @@
       </div>
       <div class="flex items-center gap-2">
         <app-month-selector></app-month-selector>
-        <app-theme-picker></app-theme-picker>
+        <!-- Theme picker desactivado temporalmente para no tener que mantener
+             overrides de estilo por cada componente nuevo. Descomentar este
+             elemento y restaurar load() en ThemeService cuando se quiera
+             volver a habilitar. -->
+        <!-- <app-theme-picker></app-theme-picker> -->
       </div>
     </div>
   </header>
@@ -36,6 +40,7 @@
         <app-transaction-form></app-transaction-form>
         <app-cards-manager></app-cards-manager>
         <app-subscriptions-manager></app-subscriptions-manager>
+        <app-categories-manager></app-categories-manager>
         <app-category-breakdown></app-category-breakdown>
         <app-data-backup></app-data-backup>
       </div>
@@ -46,6 +51,9 @@
         <app-transaction-list></app-transaction-list>
       </div>
     </div>
+
+    <!-- Análisis (ancho completo) -->
+    <app-analytics></app-analytics>
 
     <footer class="text-center text-xs text-slate-400 py-4">
       Hecho con Angular 21 y Tailwind CSS

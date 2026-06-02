@@ -29,7 +29,9 @@ app-recurring-templates,
 app-transaction-list,
 app-month-selector,
 app-data-backup,
-app-theme-picker {
+app-theme-picker,
+app-analytics,
+app-categories-manager {
   display: block;
 }
 

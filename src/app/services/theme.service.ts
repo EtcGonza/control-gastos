@@ -71,11 +71,18 @@ export class ThemeService {
   }
 
   private load(): Theme {
+    // Temporalmente forzamos 'classic' para no tener que mantener overrides
+    // por componente en cada nueva feature. Para re-habilitar la selección
+    // de tema, descomentar el bloque siguiente y descomentar el
+    // <app-theme-picker> en app.html.
+    return 'classic';
+
+    /*
     if (typeof localStorage !== 'undefined') {
       const v = localStorage.getItem(STORAGE_KEY);
       if (v && AVAILABLE_THEMES.some((t) => t.id === v)) return v as Theme;
-      // Migración suave: si quedó 'dark' u otro valor viejo, lo ignoramos.
     }
     return 'classic';
+    */
   }
 }
