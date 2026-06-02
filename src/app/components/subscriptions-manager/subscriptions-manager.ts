@@ -78,72 +78,87 @@ import { InfoTooltip } from '../info-tooltip/info-tooltip';
                 <div class="flex gap-1 mt-2 flex-wrap">
                   <!-- Update price -->
                   @if (priceEditId() === s.id) {
-                    <div class="w-full flex items-center gap-2 bg-slate-50 rounded-lg p-2 flex-wrap">
-                      <input type="number" min="0" step="0.01"
-                             [(ngModel)]="newPriceAmount"
-                             placeholder="Nuevo monto"
-                             class="flex-1 min-w-[100px] rounded-lg border border-slate-200 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500">
-                      <span class="flex items-center text-[11px] text-slate-500">
-                        desde
-                        <app-info-tooltip>
-                          <p class="font-semibold mb-1">¿Desde qué fecha?</p>
-                          <p class="text-slate-300">
-                            Es la fecha desde la cual aplica el nuevo precio
-                            <b>en adelante</b>.
-                          </p>
-                          <p class="text-slate-300 mt-2">
-                            Los meses anteriores siguen mostrando el precio que
-                            tenían cuando estaban vigentes (el histórico no se
-                            toca).
-                          </p>
-                        </app-info-tooltip>
-                      </span>
-                      <input type="date"
-                             [(ngModel)]="newPriceFrom"
-                             class="rounded-lg border border-slate-200 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500">
-                      <button type="button" (click)="savePrice(s.id)"
-                              class="px-3 py-1 rounded-lg bg-pink-600 text-white text-xs font-semibold hover:bg-pink-700">
-                        Guardar
-                      </button>
-                      <button type="button" (click)="cancelPriceEdit()"
-                              class="px-3 py-1 rounded-lg bg-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-300">
-                        Cancelar
-                      </button>
+                    <div class="w-full bg-slate-50 rounded-lg p-3 space-y-2">
+                      <!-- Inputs: monto + mes -->
+                      <div class="grid grid-cols-2 gap-2">
+                        <div>
+                          <label class="text-[10px] font-medium text-slate-500 mb-0.5 block">Nuevo monto</label>
+                          <input type="number" min="0" step="0.01"
+                                 [(ngModel)]="newPriceAmount"
+                                 class="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500">
+                        </div>
+                        <div>
+                          <label class="text-[10px] font-medium text-slate-500 mb-0.5 flex items-center">
+                            Desde
+                            <app-info-tooltip>
+                              <p class="font-semibold mb-1">¿Desde qué mes?</p>
+                              <p class="text-slate-300">
+                                Mes desde el cual aplica el nuevo precio en adelante.
+                                Los cobros de ese mes y los siguientes usan el monto nuevo.
+                              </p>
+                              <p class="text-slate-300 mt-2">
+                                Los meses anteriores conservan el precio que tenían en su momento (el histórico no se toca).
+                              </p>
+                            </app-info-tooltip>
+                          </label>
+                          <input type="month"
+                                 [(ngModel)]="newPriceFrom"
+                                 [max]="todayMonth"
+                                 class="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500">
+                        </div>
+                      </div>
+                      <!-- Acciones -->
+                      <div class="flex justify-end gap-2">
+                        <button type="button" (click)="cancelPriceEdit()"
+                                class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-300 transition">
+                          Cancelar
+                        </button>
+                        <button type="button" (click)="savePrice(s.id)"
+                                class="px-3 py-1.5 rounded-lg bg-pink-600 text-white text-xs font-semibold hover:bg-pink-700 transition">
+                          Guardar
+                        </button>
+                      </div>
                     </div>
                   } @else if (cancelId() === s.id) {
-                    <div class="w-full flex items-center gap-2 bg-slate-50 rounded-lg p-2 flex-wrap">
-                      <span class="text-xs text-slate-500 flex items-center">
-                        Fecha de cancelación:
-                        <app-info-tooltip>
-                          <p class="font-semibold mb-1">Fecha de cancelación</p>
-                          <p class="text-slate-300">
-                            Día efectivo en que diste de baja la suscripción.
-                          </p>
-                          <p class="text-slate-300 mt-2">
-                            Regla: si la cancelación es <b>anterior</b> al día
-                            de cobro de ese mes, ese mes no se cobra.
-                            Si es <b>el mismo día o posterior</b>, ese mes sí
-                            se cobra (ya te lo debitaron).
-                          </p>
-                          <p class="text-slate-400 text-[11px] mt-2">
-                            Ej.: Netflix cobra los 15. Cancelás el 10/05 → mayo no se cobra.
-                            Cancelás el 20/05 → mayo sí se cobra.
-                          </p>
-                        </app-info-tooltip>
-                      </span>
-                      <input type="date"
-                             [(ngModel)]="cancelDateInput"
-                             [max]="today"
-                             [min]="s.startDate"
-                             class="rounded-lg border border-slate-200 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500">
-                      <button type="button" (click)="confirmCancel(s.id)"
-                              class="px-3 py-1 rounded-lg bg-slate-700 text-white text-xs font-semibold hover:bg-slate-800">
-                        Cancelar suscripción
-                      </button>
-                      <button type="button" (click)="cancelCancel()"
-                              class="px-3 py-1 rounded-lg bg-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-300">
-                        Volver
-                      </button>
+                    <div class="w-full bg-slate-50 rounded-lg p-3 space-y-2">
+                      <!-- Input + helper -->
+                      <div>
+                        <label class="text-[10px] font-medium text-slate-500 mb-0.5 flex items-center">
+                          Fecha de cancelación
+                          <app-info-tooltip>
+                            <p class="font-semibold mb-1">Fecha de cancelación</p>
+                            <p class="text-slate-300">
+                              Día efectivo en que diste de baja la suscripción.
+                            </p>
+                            <p class="text-slate-300 mt-2">
+                              Regla: si la cancelación es <b>anterior</b> al día
+                              de cobro de ese mes, ese mes no se cobra.
+                              Si es <b>el mismo día o posterior</b>, ese mes sí
+                              se cobra (ya te lo debitaron).
+                            </p>
+                            <p class="text-slate-400 text-[11px] mt-2">
+                              Ej.: Netflix cobra los 15. Cancelás el 10/05 → mayo no se cobra.
+                              Cancelás el 20/05 → mayo sí se cobra.
+                            </p>
+                          </app-info-tooltip>
+                        </label>
+                        <input type="date"
+                               [(ngModel)]="cancelDateInput"
+                               [max]="today"
+                               [min]="s.startDate"
+                               class="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500">
+                      </div>
+                      <!-- Acciones -->
+                      <div class="flex justify-end gap-2">
+                        <button type="button" (click)="cancelCancel()"
+                                class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-300 transition">
+                          Volver
+                        </button>
+                        <button type="button" (click)="confirmCancel(s.id)"
+                                class="px-3 py-1.5 rounded-lg bg-slate-700 text-white text-xs font-semibold hover:bg-slate-800 transition">
+                          Cancelar suscripción
+                        </button>
+                      </div>
                     </div>
                   } @else {
                     <button type="button" (click)="startPriceEdit(s)"
@@ -179,7 +194,7 @@ import { InfoTooltip } from '../info-tooltip/info-tooltip';
                   <ul class="mt-2 text-[11px] text-slate-500 bg-slate-50 rounded-lg p-2 space-y-1">
                     @for (p of s.priceHistory; track p.from) {
                       <li class="flex justify-between">
-                        <span>desde {{ p.from | date:'dd/MM/yy' }}</span>
+                        <span>desde {{ p.from | date:'MMMM yyyy' }}</span>
                         <span class="font-semibold">
                           {{ s.currency === 'USD' ? 'US$' : '$' }}{{ p.amount | number:'1.2-2' }}
                         </span>
@@ -371,7 +386,10 @@ export class SubscriptionsManager {
 
   // form acciones
   protected newPriceAmount: number | null = null;
-  protected newPriceFrom = new Date().toISOString().slice(0, 10);
+  /** Mes desde el cual aplica el nuevo precio (formato YYYY-MM). */
+  protected newPriceFrom = new Date().toISOString().slice(0, 7);
+  /** Mes actual en formato YYYY-MM, usado como max del input. */
+  protected readonly todayMonth = new Date().toISOString().slice(0, 7);
   protected cancelDateInput = new Date().toISOString().slice(0, 10);
 
   toggleExpanded(): void {
@@ -429,7 +447,7 @@ export class SubscriptionsManager {
     this.priceEditId.set(s.id);
     this.cancelId.set(null);
     this.newPriceAmount = this.tx.currentPrice(s);
-    this.newPriceFrom = new Date().toISOString().slice(0, 10);
+    this.newPriceFrom = new Date().toISOString().slice(0, 7);
   }
 
   cancelPriceEdit(): void {
@@ -438,7 +456,10 @@ export class SubscriptionsManager {
 
   savePrice(id: string): void {
     if (this.newPriceAmount == null || this.newPriceAmount < 0) return;
-    this.tx.addSubscriptionPrice(id, Number(this.newPriceAmount), this.newPriceFrom);
+    // Guardamos el primer día del mes para mantener el modelo en YYYY-MM-DD.
+    // El usuario eligió un mes; internamente equivale a "desde el día 1".
+    const fromDate = `${this.newPriceFrom}-01`;
+    this.tx.addSubscriptionPrice(id, Number(this.newPriceAmount), fromDate);
     this.priceEditId.set(null);
   }
 
