@@ -1,9 +1,17 @@
 import { Injectable, computed, effect, signal, untracked } from '@angular/core';
 import { CardPurchase, Currency, Installment, SurchargeMode } from '../models/card-purchase.model';
 import { CreditCard } from '../models/credit-card.model';
+import { CustomCategory, CustomCategoryType } from '../models/custom-category.model';
 import { RecurringTemplate } from '../models/recurring-template.model';
 import { Subscription } from '../models/subscription.model';
-import { Category, Transaction, TransactionType } from '../models/transaction.model';
+import {
+  CATEGORY_COLORS,
+  Category,
+  EXPENSE_CATEGORIES,
+  INCOME_CATEGORIES,
+  Transaction,
+  TransactionType,
+} from '../models/transaction.model';
 
 const STORAGE_KEY = 'control-gastos:transactions';
 const TEMPLATES_KEY = 'control-gastos:templates';
@@ -11,6 +19,7 @@ const CARDS_KEY = 'control-gastos:cards';
 const PURCHASES_KEY = 'control-gastos:purchases';
 const SUBS_KEY = 'control-gastos:subscriptions';
 const RATES_KEY = 'control-gastos:rates';
+const CUSTOM_CATEGORIES_KEY = 'control-gastos:custom-categories';
 
 /** Estructura del archivo de exportación de datos (respaldo). */
 export interface ExportFile {
@@ -24,6 +33,7 @@ export interface ExportFile {
     purchases: CardPurchase[];
     subscriptions: Subscription[];
     rates: Record<string, number>;
+    customCategories?: CustomCategory[]; // opcional para retrocompat
   };
 }
 
@@ -93,6 +103,12 @@ export class TransactionsService {
   /** Mapa de fecha (YYYY-MM-DD) → cotización oficial vendedor. */
   private readonly _rates = signal<Record<string, number>>(this.loadRates());
   readonly rates = this._rates.asReadonly();
+
+  /** Categorías personalizadas creadas por el usuario. */
+  private readonly _customCategories = signal<CustomCategory[]>(
+    this.load<CustomCategory>(CUSTOM_CATEGORIES_KEY)
+  );
+  readonly customCategories = this._customCategories.asReadonly();
   /** Set de fechas que ya pedimos al API (para no reintentar). */
   private readonly _fetchedRates = new Set<string>();
   /** True si por lo menos hubo un intento de fetch al cargar. */
@@ -128,9 +144,8 @@ export class TransactionsService {
   // Entradas mensuales (transacciones reales + cuotas virtuales)
   // ============================================================
 
-  readonly monthlyEntries = computed<MonthlyEntry[]>(() => {
-    const month = this._selectedMonth();
-
+  /** Construye las MonthlyEntries de un mes arbitrario (no atado al seleccionado). */
+  entriesForMonth(month: string): MonthlyEntry[] {
     const txEntries: MonthlyEntry[] = this._transactions()
       .filter((t) => t.date.startsWith(month))
       .map((t) => ({
@@ -199,7 +214,91 @@ export class TransactionsService {
     return [...txEntries, ...instEntries, ...subEntries].sort((a, b) =>
       b.date.localeCompare(a.date)
     );
-  });
+  }
+
+  readonly monthlyEntries = computed<MonthlyEntry[]>(() =>
+    this.entriesForMonth(this._selectedMonth())
+  );
+
+  /** Ingresos ARS de un mes arbitrario. */
+  incomeForMonth(month: string): number {
+    return this.entriesForMonth(month)
+      .filter((t) => t.type === 'ingreso' && t.currency === 'ARS')
+      .reduce((acc, t) => acc + t.amount, 0);
+  }
+
+  /** Gastos totales de un mes arbitrario, expresados en ARS (convirtiendo los USD). */
+  expensesForMonth(month: string): number {
+    return this.entriesForMonth(month)
+      .filter((t) => t.type === 'gasto')
+      .reduce((acc, t) => acc + this.entryArsAmount(t), 0);
+  }
+
+  /** Balance (ingresos - gastos) de un mes arbitrario. */
+  balanceForMonth(month: string): number {
+    return this.incomeForMonth(month) - this.expensesForMonth(month);
+  }
+
+  /** Gastos agrupados por categoría para un mes arbitrario (ARS). */
+  expensesByCategoryForMonth(month: string): Array<{ category: string; total: number }> {
+    const map = new Map<string, number>();
+    this.entriesForMonth(month)
+      .filter((t) => t.type === 'gasto')
+      .forEach((t) => {
+        const arsValue = this.entryArsAmount(t);
+        if (arsValue > 0) {
+          map.set(t.category, (map.get(t.category) ?? 0) + arsValue);
+        }
+      });
+    return Array.from(map.entries())
+      .map(([category, total]) => ({ category, total }))
+      .sort((a, b) => b.total - a.total);
+  }
+
+  /**
+   * Total acumulado pagado en una suscripción desde su inicio hasta hoy
+   * (o hasta la fecha de cancelación si está cancelada).
+   *
+   * Devuelve la suma en la moneda original de la suscripción.
+   */
+  subscriptionTotalCost(sub: Subscription): { total: number; count: number; currency: Currency } {
+    const todayISO = new Date().toISOString().slice(0, 10);
+    const chargeDay = Number(sub.startDate.split('-')[2]);
+    const [sy, sm] = sub.startDate.split('-').map(Number);
+
+    let total = 0;
+    let count = 0;
+
+    // Iteramos cada mes desde el mes del startDate hasta el mes actual.
+    let curY = sy;
+    let curM = sm; // 1-12
+    const todayY = new Date().getFullYear();
+    const todayM = new Date().getMonth() + 1;
+
+    while (curY < todayY || (curY === todayY && curM <= todayM)) {
+      const lastDay = new Date(curY, curM, 0).getDate();
+      const day = Math.min(chargeDay, lastDay);
+      const chargeDate = `${curY}-${String(curM).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+      // Filtros de actividad
+      if (
+        chargeDate >= sub.startDate &&
+        chargeDate <= todayISO &&
+        (!sub.cancelDate || chargeDate <= sub.cancelDate)
+      ) {
+        total += this.priceForDate(sub, chargeDate);
+        count++;
+      }
+
+      curM++;
+      if (curM > 12) {
+        curM = 1;
+        curY++;
+      }
+    }
+
+    return { total: this.roundMoney(total), count, currency: sub.currency };
+  }
 
   /** Compatibilidad: alias usado por componentes existentes. */
   readonly monthlyTransactions = this.monthlyEntries;
@@ -697,8 +796,13 @@ export class TransactionsService {
   /** Helper interno usado por las métricas mensuales. */
   private entryArsAmount(entry: MonthlyEntry): number {
     if (entry.currency === 'ARS') return entry.amount;
-    // USD
-    if (entry.conversion?.usdDirect) return 0; // pago directo USD, no impacta ARS
+    // USD pago directo: aunque se cancela en dólares, representa una obligación
+    // mensual real. La convertimos al último TC conocido como estimado para
+    // que aparezca en el balance ARS y en los gastos fijos del mes.
+    if (entry.conversion?.usdDirect) {
+      const latest = this.latestRate();
+      return latest ? this.roundMoney(entry.amount * latest.rate) : 0;
+    }
     const conv = this.convertEntryToArs(entry);
     return conv?.arsAmount ?? 0;
   }
@@ -771,6 +875,74 @@ export class TransactionsService {
   }
 
   // ============================================================
+  // Categorías custom
+  // ============================================================
+
+  /** Lista combinada de categorías de gasto: defaults + customs. */
+  readonly allExpenseCategories = computed<Category[]>(() => {
+    const customExp = this._customCategories()
+      .filter((c) => c.type === 'expense')
+      .map((c) => c.name);
+    return [...EXPENSE_CATEGORIES, ...customExp];
+  });
+
+  /** Lista combinada de categorías de ingreso: defaults + customs. */
+  readonly allIncomeCategories = computed<Category[]>(() => {
+    const customInc = this._customCategories()
+      .filter((c) => c.type === 'income')
+      .map((c) => c.name);
+    return [...INCOME_CATEGORIES, ...customInc];
+  });
+
+  /** Color asociado a una categoría (default o custom). Gris si no se encuentra. */
+  colorForCategory(name: string): string {
+    const def = (CATEGORY_COLORS as Record<string, string>)[name];
+    if (def) return def;
+    const custom = this._customCategories().find((c) => c.name === name);
+    if (custom) return custom.color;
+    return '#64748b';
+  }
+
+  /** Crea una nueva categoría custom. Rechaza si el nombre ya existe en su tipo. */
+  addCustomCategory(input: {
+    name: string;
+    type: CustomCategoryType;
+    color: string;
+  }): CustomCategory | null {
+    const name = input.name.trim();
+    if (!name) return null;
+
+    // Evitar duplicados case-insensitive contra defaults y customs del mismo tipo
+    const defaults = input.type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+    const lower = name.toLowerCase();
+    if (defaults.some((d) => d.toLowerCase() === lower)) return null;
+    if (
+      this._customCategories().some(
+        (c) => c.type === input.type && c.name.toLowerCase() === lower
+      )
+    ) {
+      return null;
+    }
+
+    const cat: CustomCategory = {
+      id: crypto.randomUUID(),
+      name,
+      type: input.type,
+      color: input.color,
+      createdAt: new Date().toISOString(),
+    };
+    this._customCategories.update((list) => [...list, cat]);
+    this.persist(CUSTOM_CATEGORIES_KEY, this._customCategories());
+    return cat;
+  }
+
+  /** Elimina una categoría custom. Las transacciones que la usaban no se tocan. */
+  removeCustomCategory(id: string): void {
+    this._customCategories.update((list) => list.filter((c) => c.id !== id));
+    this.persist(CUSTOM_CATEGORIES_KEY, this._customCategories());
+  }
+
+  // ============================================================
   // Export / Import / Reset
   // ============================================================
 
@@ -782,6 +954,7 @@ export class TransactionsService {
     purchases: number;
     subscriptions: number;
     rates: number;
+    customCategories: number;
   } {
     return {
       transactions: this._transactions().length,
@@ -790,6 +963,7 @@ export class TransactionsService {
       purchases: this._purchases().length,
       subscriptions: this._subscriptions().length,
       rates: Object.keys(this._rates()).length,
+      customCategories: this._customCategories().length,
     };
   }
 
@@ -806,6 +980,7 @@ export class TransactionsService {
         purchases: this._purchases(),
         subscriptions: this._subscriptions(),
         rates: this._rates(),
+        customCategories: this._customCategories(),
       },
     };
   }
@@ -826,6 +1001,9 @@ export class TransactionsService {
         ? d.rates
         : {}
     );
+    this._customCategories.set(
+      Array.isArray(d.customCategories) ? d.customCategories : []
+    );
 
     this.persist(STORAGE_KEY, this._transactions());
     this.persist(TEMPLATES_KEY, this._templates());
@@ -833,6 +1011,7 @@ export class TransactionsService {
     this.persist(PURCHASES_KEY, this._purchases());
     this.persist(SUBS_KEY, this._subscriptions());
     this.persist(RATES_KEY, this._rates());
+    this.persist(CUSTOM_CATEGORIES_KEY, this._customCategories());
   }
 
   /**
@@ -870,12 +1049,14 @@ export class TransactionsService {
     this._purchases.set([]);
     this._subscriptions.set([]);
     this._rates.set({});
+    this._customCategories.set([]);
     this.persist(STORAGE_KEY, []);
     this.persist(TEMPLATES_KEY, []);
     this.persist(CARDS_KEY, []);
     this.persist(PURCHASES_KEY, []);
     this.persist(SUBS_KEY, []);
     this.persist(RATES_KEY, {});
+    this.persist(CUSTOM_CATEGORIES_KEY, []);
   }
 
   private loadRates(): Record<string, number> {

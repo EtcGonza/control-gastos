@@ -12,7 +12,11 @@ export type ExpenseCategory =
 
 export type IncomeCategory = 'Sueldo' | 'Horas extras' | 'Otros';
 
-export type Category = ExpenseCategory | IncomeCategory;
+/**
+ * Categoría puede ser una de las hardcodeadas (ExpenseCategory | IncomeCategory)
+ * o una custom creada por el usuario. Por eso es string y no union literal.
+ */
+export type Category = string;
 
 export interface Transaction {
   id: string;
