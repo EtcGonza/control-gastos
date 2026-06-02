@@ -1,0 +1,75 @@
+# Deploy de Control de Gastos a GitHub Pages
+#
+# Se dispara automáticamente en cada push a `main`, y también puede
+# ejecutarse manualmente desde la pestaña Actions.
+#
+# Steps:
+#   1. Checkout del repo
+#   2. Setup de Node 22 con cache de npm
+#   3. Install de dependencias (`npm ci`)
+#   4. Build de Angular con base-href ajustado para una "project page"
+#      (https://<user>.github.io/control-gastos/). Si más adelante usás un
+#      dominio custom servido en root, cambiá el `--base-href` a `/`.
+#   5. Configuración del entorno Pages
+#   6. Upload del artefacto (carpeta dist/control-gastos/browser)
+#   7. Deploy al entorno github-pages
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # Permite ejecutarlo a mano desde la UI de GitHub Actions
+  workflow_dispatch:
+
+# Permisos necesarios para que el deploy escriba en Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Sólo un deploy a la vez en curso. Si llega otro push mientras hay uno
+# corriendo, espera a que termine. Así evitamos pisarnos a nosotros mismos.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build Angular
+        run: npm run build -- --base-href=/control-gastos/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/control-gastos/browser
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
