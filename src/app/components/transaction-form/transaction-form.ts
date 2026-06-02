@@ -1,13 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Currency, SurchargeMode } from '../../models/card-purchase.model';
-import {
-  Category,
-  EXPENSE_CATEGORIES,
-  INCOME_CATEGORIES,
-  TransactionType,
-} from '../../models/transaction.model';
+import { Category, TransactionType } from '../../models/transaction.model';
 import { TransactionsService } from '../../services/transactions.service';
 import { InfoTooltip } from '../info-tooltip/info-tooltip';
 
@@ -201,7 +196,7 @@ type FormMode = TransactionType | 'tarjeta';
               <label class="block text-xs font-medium text-slate-600 mb-1">Categoría</label>
               <select name="ccat" [(ngModel)]="cCategory" required
                       class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
-                @for (cat of expenseCategories; track cat) {
+                @for (cat of expenseCategories(); track cat) {
                   <option [value]="cat">{{ cat }}</option>
                 }
               </select>
@@ -292,7 +287,12 @@ export class TransactionForm {
   protected date = new Date().toISOString().slice(0, 10);
   protected category: Category = 'Otros';
   protected fixed = false;
-  protected readonly currentCategories = signal<Category[]>(EXPENSE_CATEGORIES);
+  /** Categorías visibles según el tab activo. Reactivo si el usuario agrega custom. */
+  protected readonly currentCategories = computed<Category[]>(() =>
+    this.mode() === 'ingreso'
+      ? this.tx.allIncomeCategories()
+      : this.tx.allExpenseCategories()
+  );
 
   // ----- form tarjeta -----
   protected cardId = '';
@@ -303,15 +303,14 @@ export class TransactionForm {
   protected cCurrency: Currency = 'ARS';
   protected cSurchargeMode: SurchargeMode = 'auto';
   protected cCategory: Category = 'Otros';
-  protected readonly expenseCategories = EXPENSE_CATEGORIES;
+  /** Para el tab Tarjeta — siempre categorías de gasto (defaults + custom). */
+  protected readonly expenseCategories = this.tx.allExpenseCategories;
 
   setMode(m: FormMode): void {
     this.mode.set(m);
     if (m === 'ingreso') {
-      this.currentCategories.set(INCOME_CATEGORIES);
       this.category = 'Sueldo';
     } else if (m === 'gasto') {
-      this.currentCategories.set(EXPENSE_CATEGORIES);
       this.category = 'Otros';
     }
   }

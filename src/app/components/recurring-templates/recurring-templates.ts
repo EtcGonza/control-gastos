@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CATEGORY_COLORS } from '../../models/transaction.model';
 import { RecurringTemplate } from '../../models/recurring-template.model';
 import { TransactionsService } from '../../services/transactions.service';
 
@@ -214,7 +213,7 @@ export class RecurringTemplates {
   });
 
   color(cat: string): string {
-    return (CATEGORY_COLORS as Record<string, string>)[cat] ?? '#64748b';
+    return this.tx.colorForCategory(cat);
   }
 
   startEdit(t: RecurringTemplate): void {

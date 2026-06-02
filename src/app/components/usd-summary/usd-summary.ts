@@ -44,7 +44,7 @@ import { TransactionsService } from '../../services/transactions.service';
               </span>
             </p>
             <p class="text-[11px] text-emerald-600/70 mt-0.5">
-              Cuotas marcadas como "pago el resumen en USD".
+              Obligaciones marcadas como "pago el resumen en USD" — ya incluidas en los gastos del mes en pesos al TC último conocido.
             </p>
           </div>
         </div>

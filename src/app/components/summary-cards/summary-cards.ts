@@ -102,9 +102,13 @@ import { TransactionsService } from '../../services/transactions.service';
         <div class="tooltip">
           <p class="font-semibold mb-1">Gastos fijos sobre ingresos</p>
           <p class="text-slate-300">
-            Porción de tus ingresos del mes que se va en <b>gastos marcados como fijos</b>
-            (alquiler, servicios, suscripciones, etc.).
+            Porción de tus ingresos del mes que se va en gastos fijos. Incluye:
           </p>
+          <ul class="text-slate-300 mt-1 pl-3 list-disc text-[11px]">
+            <li>Movimientos manuales marcados como <b>fijos</b>.</li>
+            <li><b>Todas las cuotas</b> de tarjeta del mes.</li>
+            <li><b>Todas las suscripciones</b> del mes, incluso las pagadas en USD (convertidas al TC último conocido).</li>
+          </ul>
           <p class="text-slate-400 text-[11px] mt-2">
             Cálculo: gastos fijos ÷ ingresos del mes · 100.
             <br>Color: <span class="text-emerald-300">verde</span> &lt; 50%,

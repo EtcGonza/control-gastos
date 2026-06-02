@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CATEGORY_COLORS } from '../../models/transaction.model';
 import { ConfirmService } from '../../services/confirm.service';
 import { MonthlyEntry, TransactionsService } from '../../services/transactions.service';
 
@@ -120,7 +119,7 @@ type SortMode = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc';
         </div>
       } @else {
         <ul class="divide-y divide-slate-100 -mx-2">
-          @for (t of filtered(); track t.id) {
+          @for (t of paginated(); track t.id) {
             <li class="flex items-center gap-3 px-2 py-3 hover:bg-slate-50 rounded-lg transition group">
               <span class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
                     [style.background-color]="color(t.category)">
@@ -199,6 +198,44 @@ type SortMode = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc';
             </li>
           }
         </ul>
+
+        <!-- ===== Paginación ===== -->
+        @if (filtered().length > pageSize()) {
+          <div class="mt-4 flex items-center justify-between flex-wrap gap-2 text-xs text-slate-600">
+            <div class="flex items-center gap-2">
+              <span>Mostrando {{ pageStart() }}-{{ pageEnd() }} de {{ filtered().length }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="flex items-center gap-1.5">
+                <span class="text-slate-500">Por página:</span>
+                <select [(ngModel)]="pageSizeValue"
+                        class="rounded-lg border border-slate-200 px-2 py-1 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option [value]="10">10</option>
+                  <option [value]="15">15</option>
+                  <option [value]="20">20</option>
+                  <option [value]="30">30</option>
+                </select>
+              </label>
+              <div class="flex items-center gap-1">
+                <button type="button" (click)="goToPage(currentPage() - 1)"
+                        [disabled]="currentPage() === 1"
+                        class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Anterior">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <span class="px-2 font-semibold text-slate-700 tabular-nums">
+                  {{ currentPage() }} / {{ totalPages() }}
+                </span>
+                <button type="button" (click)="goToPage(currentPage() + 1)"
+                        [disabled]="currentPage() >= totalPages()"
+                        class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Siguiente">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
       }
     </div>
   `,
@@ -290,8 +327,76 @@ export class TransactionList {
     this.sort.set('date-desc');
   }
 
+  // ============ Paginación ============
+  private readonly PAGE_SIZE_KEY = 'control-gastos:tx-list-page-size';
+  protected readonly pageSize = signal<number>(this.loadPageSize());
+  protected readonly currentPage = signal<number>(1);
+
+  get pageSizeValue(): number {
+    return this.pageSize();
+  }
+  set pageSizeValue(v: number) {
+    const n = Number(v);
+    this.pageSize.set(n);
+    this.currentPage.set(1);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(this.PAGE_SIZE_KEY, String(n));
+    }
+  }
+
+  protected readonly totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.filtered().length / this.pageSize()))
+  );
+
+  protected readonly paginated = computed(() => {
+    const size = this.pageSize();
+    const page = this.currentPage();
+    const start = (page - 1) * size;
+    return this.filtered().slice(start, start + size);
+  });
+
+  protected pageStart(): number {
+    if (this.filtered().length === 0) return 0;
+    return (this.currentPage() - 1) * this.pageSize() + 1;
+  }
+
+  protected pageEnd(): number {
+    return Math.min(this.currentPage() * this.pageSize(), this.filtered().length);
+  }
+
+  goToPage(page: number): void {
+    const clamped = Math.max(1, Math.min(page, this.totalPages()));
+    this.currentPage.set(clamped);
+  }
+
+  private loadPageSize(): number {
+    if (typeof localStorage === 'undefined') return 10;
+    const v = localStorage.getItem(this.PAGE_SIZE_KEY);
+    const n = v ? Number(v) : 10;
+    return [10, 15, 20, 30].includes(n) ? n : 10;
+  }
+
+  constructor() {
+    // Si cambian los filtros o el mes, volver a la página 1
+    effect(() => {
+      this.typeFilter();
+      this.sourceFilter();
+      this.categoryFilter();
+      this.sort();
+      this.tx.selectedMonth();
+      untracked(() => this.currentPage.set(1));
+    });
+    // Si la página actual queda fuera de rango (ej. borrar items), retroceder.
+    effect(() => {
+      const tp = this.totalPages();
+      if (this.currentPage() > tp) {
+        untracked(() => this.currentPage.set(tp));
+      }
+    });
+  }
+
   color(cat: string): string {
-    return (CATEGORY_COLORS as Record<string, string>)[cat] ?? '#64748b';
+    return this.tx.colorForCategory(cat);
   }
 
   arsConv(t: MonthlyEntry) {

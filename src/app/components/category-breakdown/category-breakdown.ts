@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { CATEGORY_COLORS } from '../../models/transaction.model';
 import { TransactionsService } from '../../services/transactions.service';
 
 @Component({
@@ -50,7 +49,7 @@ export class CategoryBreakdown {
   protected readonly tx = inject(TransactionsService);
 
   color(cat: string): string {
-    return (CATEGORY_COLORS as Record<string, string>)[cat] ?? '#64748b';
+    return this.tx.colorForCategory(cat);
   }
 
   percentage(amount: number): number {
