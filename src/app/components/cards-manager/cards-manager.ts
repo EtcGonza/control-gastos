@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CardBrand, CreditCard } from '../../models/credit-card.model';
+import { CardBrand, CreditCard } from '../../core/models/credit-card/credit-card.model';
 import { ConfirmService } from '../../services/confirm.service';
 import { TransactionsService } from '../../services/transactions.service';
 import { InfoTooltip } from '../info-tooltip/info-tooltip';

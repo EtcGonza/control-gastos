@@ -1,12 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Currency, SurchargeMode } from '../../models/card-purchase.model';
+import { Currency, SurchargeMode } from '../../core/models/credit-card/card-purchase.model';
 import {
   Category,
   FALLBACK_EXPENSE_CATEGORY_ID,
   TransactionType,
-} from '../../models/transaction.model';
+} from '../../core/models/transaction/transaction.model';
 import { CategoryView, TransactionsService } from '../../services/transactions.service';
 import { InfoTooltip } from '../info-tooltip/info-tooltip';
 

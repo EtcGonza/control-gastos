@@ -1,11 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CustomCategory, CustomCategoryType } from '../../models/custom-category.model';
+import { CustomCategory, CustomCategoryType } from '../../core/models/category/custom-category.model';
 import {
   DEFAULT_EXPENSE_CATEGORIES,
   DEFAULT_INCOME_CATEGORIES,
-} from '../../models/transaction.model';
+} from '../../core/models/transaction/transaction.model';
 import { ConfirmService } from '../../services/confirm.service';
 import { TransactionsService } from '../../services/transactions.service';
 

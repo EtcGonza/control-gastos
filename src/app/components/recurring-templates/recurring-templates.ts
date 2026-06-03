@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RecurringTemplate } from '../../models/recurring-template.model';
+import { RecurringTemplate } from '../../core/models/recurring-template/recurring-template.model';
 import { TransactionsService } from '../../services/transactions.service';
 
 @Component({

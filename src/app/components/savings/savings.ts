@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Currency } from '../../models/card-purchase.model';
-import { Saving, SavingMovement, SavingMovementType } from '../../models/saving.model';
+import { Currency } from '../../core/models/credit-card/card-purchase.model';
+import { Saving, SavingMovement, SavingMovementType } from '../../core/models/saving/saving.model';
 import { ConfirmService } from '../../services/confirm.service';
 import { TransactionsService } from '../../services/transactions.service';
 

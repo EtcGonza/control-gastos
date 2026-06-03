@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { Subscription } from '../../models/subscription.model';
+import { Subscription } from '../../core/models/subscription/subscription.model';
 import { TransactionsService } from '../../services/transactions.service';
 
 interface MonthPoint {

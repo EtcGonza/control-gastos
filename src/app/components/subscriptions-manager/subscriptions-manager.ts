@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Currency, SurchargeMode } from '../../models/card-purchase.model';
-import { Subscription } from '../../models/subscription.model';
+import { Currency, SurchargeMode } from '../../core/models/credit-card/card-purchase.model';
+import { Subscription } from '../../core/models/subscription/subscription.model';
 import { ConfirmService } from '../../services/confirm.service';
 import { TransactionsService } from '../../services/transactions.service';
 import { InfoTooltip } from '../info-tooltip/info-tooltip';
