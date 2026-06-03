@@ -43,6 +43,7 @@ const SECTIONS_WITH_MONTH: NavSection[] = ['mes', 'analisis'];
 
 @Component({
   selector: 'app-root',
+  standalone: true,
   imports: [
     CommonModule,
     Sidebar,
@@ -62,10 +63,10 @@ const SECTIONS_WITH_MONTH: NavSection[] = ['mes', 'analisis'];
     ConfirmHost,
     // ThemePicker, // deshabilitado temporalmente
   ],
-  templateUrl: './app.html',
-  styleUrl: './app.css',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss'],
 })
-export class App {
+export class AppComponent {
   protected readonly tx = inject(TransactionsService);
   protected readonly nav = inject(NavigationService);
   private readonly confirmSvc = inject(ConfirmService);
