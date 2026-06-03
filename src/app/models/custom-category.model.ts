@@ -12,5 +12,11 @@ export interface CustomCategory {
   name: string;
   type: CustomCategoryType;
   color: string;       // hex, ej: '#a855f7'
+  /**
+   * Si está archivada, NO aparece en los pickers de nuevas operaciones pero
+   * las transacciones existentes que la referencian siguen mostrándola
+   * normalmente. Es un soft delete: el usuario la puede reactivar.
+   */
+  archived?: boolean;
   createdAt: string;
 }

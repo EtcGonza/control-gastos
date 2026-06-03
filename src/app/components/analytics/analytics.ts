@@ -238,7 +238,7 @@ interface SubTotalRow {
                           (mouseleave)="hoverCat.set(null)">
                         <span class="w-3 h-3 rounded-sm flex-shrink-0"
                               [style.background-color]="s.color"></span>
-                        <span class="flex-1 truncate text-slate-700">{{ s.category }}</span>
+                        <span class="flex-1 truncate text-slate-700">{{ tx.nameForCategory(s.category) }}</span>
                         <span class="text-slate-500 font-medium">{{ s.pct | number:'1.0-1' }}%</span>
                       </li>
                     }

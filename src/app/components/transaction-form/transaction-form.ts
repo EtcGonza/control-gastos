@@ -2,8 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Currency, SurchargeMode } from '../../models/card-purchase.model';
-import { Category, TransactionType } from '../../models/transaction.model';
-import { TransactionsService } from '../../services/transactions.service';
+import {
+  Category,
+  FALLBACK_EXPENSE_CATEGORY_ID,
+  TransactionType,
+} from '../../models/transaction.model';
+import { CategoryView, TransactionsService } from '../../services/transactions.service';
 import { InfoTooltip } from '../info-tooltip/info-tooltip';
 
 type FormMode = TransactionType | 'tarjeta';
@@ -66,8 +70,8 @@ type FormMode = TransactionType | 'tarjeta';
             <label class="block text-xs font-medium text-slate-600 mb-1">Categoría</label>
             <select name="category" [(ngModel)]="category" required
                     class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              @for (cat of currentCategories(); track cat) {
-                <option [value]="cat">{{ cat }}</option>
+              @for (cat of currentCategories(); track cat.id) {
+                <option [value]="cat.id">{{ cat.name }}</option>
               }
             </select>
           </div>
@@ -196,8 +200,8 @@ type FormMode = TransactionType | 'tarjeta';
               <label class="block text-xs font-medium text-slate-600 mb-1">Categoría</label>
               <select name="ccat" [(ngModel)]="cCategory" required
                       class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
-                @for (cat of expenseCategories(); track cat) {
-                  <option [value]="cat">{{ cat }}</option>
+                @for (cat of expenseCategories(); track cat.id) {
+                  <option [value]="cat.id">{{ cat.name }}</option>
                 }
               </select>
             </div>
@@ -285,10 +289,11 @@ export class TransactionForm {
   protected description = '';
   protected amount: number | null = null;
   protected date = new Date().toISOString().slice(0, 10);
-  protected category: Category = 'Otros';
+  /** Almacenamos el ID, no el nombre. */
+  protected category: Category = FALLBACK_EXPENSE_CATEGORY_ID;
   protected fixed = false;
   /** Categorías visibles según el tab activo. Reactivo si el usuario agrega custom. */
-  protected readonly currentCategories = computed<Category[]>(() =>
+  protected readonly currentCategories = computed<CategoryView[]>(() =>
     this.mode() === 'ingreso'
       ? this.tx.allIncomeCategories()
       : this.tx.allExpenseCategories()
@@ -302,16 +307,16 @@ export class TransactionForm {
   protected cDate = new Date().toISOString().slice(0, 10);
   protected cCurrency: Currency = 'ARS';
   protected cSurchargeMode: SurchargeMode = 'auto';
-  protected cCategory: Category = 'Otros';
+  protected cCategory: Category = FALLBACK_EXPENSE_CATEGORY_ID;
   /** Para el tab Tarjeta — siempre categorías de gasto (defaults + custom). */
   protected readonly expenseCategories = this.tx.allExpenseCategories;
 
   setMode(m: FormMode): void {
     this.mode.set(m);
     if (m === 'ingreso') {
-      this.category = 'Sueldo';
+      this.category = 'cat-sueldo';
     } else if (m === 'gasto') {
-      this.category = 'Otros';
+      this.category = FALLBACK_EXPENSE_CATEGORY_ID;
     }
   }
 

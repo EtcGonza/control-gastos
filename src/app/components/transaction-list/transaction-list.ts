@@ -77,8 +77,8 @@ type SortMode = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc';
               <select [(ngModel)]="categoryFilterValue"
                       class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2 pr-8 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <option value="all">Categoría: todas</option>
-                @for (cat of availableCategories(); track cat) {
-                  <option [value]="cat">{{ cat }}</option>
+                @for (cat of availableCategories(); track cat.id) {
+                  <option [value]="cat.id">{{ cat.name }}</option>
                 }
               </select>
               <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
@@ -121,10 +121,58 @@ type SortMode = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc';
       } @else {
         <ul class="divide-y divide-slate-100 -mx-2">
           @for (t of paginated(); track t.id) {
+            @if (editingId() === t.id && t.source === 'transaction') {
+              <!-- ===== Modo edición de movimiento manual ===== -->
+              <li class="px-2 py-3 bg-indigo-50/40 rounded-lg my-0.5">
+                <div class="grid grid-cols-12 gap-2">
+                  <div class="col-span-12">
+                    <label class="block text-[10px] font-medium text-slate-500 mb-0.5">Descripción</label>
+                    <input type="text" [(ngModel)]="editDescription"
+                           class="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  </div>
+                  <div class="col-span-6 sm:col-span-3">
+                    <label class="block text-[10px] font-medium text-slate-500 mb-0.5">Monto</label>
+                    <input type="number" min="0" step="0.01" [(ngModel)]="editAmount"
+                           class="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  </div>
+                  <div class="col-span-6 sm:col-span-3">
+                    <label class="block text-[10px] font-medium text-slate-500 mb-0.5">Fecha</label>
+                    <input type="date" [(ngModel)]="editDate"
+                           class="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  </div>
+                  <div class="col-span-12 sm:col-span-6">
+                    <label class="block text-[10px] font-medium text-slate-500 mb-0.5">Categoría</label>
+                    <select [(ngModel)]="editCategory"
+                            class="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                      @for (cat of editCategoryOptions(); track cat.id) {
+                        <option [value]="cat.id">{{ cat.name }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="col-span-12 flex items-center justify-between flex-wrap gap-2">
+                    <label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
+                      <input type="checkbox" [(ngModel)]="editFixed"
+                             class="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                      Marcado como fijo mensual
+                    </label>
+                    <div class="flex gap-2">
+                      <button type="button" (click)="cancelEditTx()"
+                              class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-300 transition">
+                        Cancelar
+                      </button>
+                      <button type="button" (click)="saveEditTx(t)"
+                              class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition">
+                        Guardar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            } @else {
             <li class="flex items-center gap-3 px-2 py-3 hover:bg-slate-50 rounded-lg transition group">
               <span class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-                    [style.background-color]="color(t.category)">
-                {{ t.category[0] }}
+                    [style.background-color]="tx.colorForCategory(t.category)">
+                {{ tx.nameForCategory(t.category).charAt(0) }}
               </span>
 
               <div class="flex-1 min-w-0">
@@ -156,7 +204,7 @@ type SortMode = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc';
                   }
                 </div>
                 <p class="text-xs text-slate-400">
-                  {{ t.category }} ·
+                  {{ tx.nameForCategory(t.category) }} ·
                   @if (t.installment) {
                     <span>{{ t.installment.cardLabel }}</span>
                   } @else if (t.subscription) {
@@ -184,8 +232,13 @@ type SortMode = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc';
               </div>
 
               <!-- Acción contextual (siempre reserva el espacio para mantener alineación) -->
-              <div class="w-6 flex-shrink-0 flex items-center justify-center">
+              <div class="w-14 flex-shrink-0 flex items-center justify-end gap-0.5">
                 @if (t.source === 'transaction') {
+                  <button type="button" (click)="startEditTx(t)"
+                          class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-indigo-600 transition p-1"
+                          title="Editar movimiento">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                  </button>
                   <button type="button" (click)="tx.remove(t.id)"
                           class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-500 transition p-1"
                           title="Eliminar">
@@ -206,11 +259,12 @@ type SortMode = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc';
                 }
               </div>
             </li>
+            }
           }
         </ul>
 
-        <!-- ===== Paginación ===== -->
-        @if (filtered().length > pageSize()) {
+        <!-- ===== Paginación (siempre visible cuando hay movimientos) ===== -->
+        @if (filtered().length > 0) {
           <div class="mt-4 flex items-center justify-between flex-wrap gap-2 text-xs text-slate-600">
             <div class="flex items-center gap-2">
               <span>Mostrando {{ pageStart() }}-{{ pageEnd() }} de {{ filtered().length }}</span>
@@ -226,23 +280,26 @@ type SortMode = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc';
                   <option [value]="30">30</option>
                 </select>
               </label>
-              <div class="flex items-center gap-1">
-                <button type="button" (click)="goToPage(currentPage() - 1)"
-                        [disabled]="currentPage() === 1"
-                        class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition disabled:opacity-30 disabled:cursor-not-allowed"
-                        title="Anterior">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                </button>
-                <span class="px-2 font-semibold text-slate-700 tabular-nums">
-                  {{ currentPage() }} / {{ totalPages() }}
-                </span>
-                <button type="button" (click)="goToPage(currentPage() + 1)"
-                        [disabled]="currentPage() >= totalPages()"
-                        class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition disabled:opacity-30 disabled:cursor-not-allowed"
-                        title="Siguiente">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                </button>
-              </div>
+              <!-- Botones prev/next sólo cuando hay más de una página -->
+              @if (totalPages() > 1) {
+                <div class="flex items-center gap-1">
+                  <button type="button" (click)="goToPage(currentPage() - 1)"
+                          [disabled]="currentPage() === 1"
+                          class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Anterior">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                  </button>
+                  <span class="px-2 font-semibold text-slate-700 tabular-nums">
+                    {{ currentPage() }} / {{ totalPages() }}
+                  </span>
+                  <button type="button" (click)="goToPage(currentPage() + 1)"
+                          [disabled]="currentPage() >= totalPages()"
+                          class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Siguiente">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                  </button>
+                </div>
+              }
             </div>
           </div>
         }
@@ -254,6 +311,52 @@ export class TransactionList {
   protected readonly tx = inject(TransactionsService);
   private readonly confirmSvc = inject(ConfirmService);
   private readonly nav = inject(NavigationService);
+
+  // ============ Edición de movimiento manual ============
+  protected readonly editingId = signal<string | null>(null);
+  protected editDescription = '';
+  protected editAmount: number | null = null;
+  protected editCategory = '';
+  protected editDate = '';
+  protected editFixed = false;
+
+  /** Categorías disponibles según el tipo del movimiento en edición. */
+  protected readonly editCategoryOptions = computed(() => {
+    const id = this.editingId();
+    if (!id) return [];
+    const t = this.tx.transactions().find((x) => x.id === id);
+    if (!t) return [];
+    return t.type === 'ingreso'
+      ? this.tx.allIncomeCategories()
+      : this.tx.allExpenseCategories();
+  });
+
+  startEditTx(t: MonthlyEntry): void {
+    if (t.source !== 'transaction') return;
+    this.editingId.set(t.id);
+    this.editDescription = t.description;
+    this.editAmount = t.amount;
+    this.editCategory = t.category;
+    this.editDate = t.date;
+    this.editFixed = t.fixed;
+  }
+
+  cancelEditTx(): void {
+    this.editingId.set(null);
+  }
+
+  saveEditTx(t: MonthlyEntry): void {
+    if (this.editingId() !== t.id) return;
+    if (!this.editDescription.trim() || this.editAmount == null || this.editAmount <= 0) return;
+    this.tx.updateTransaction(t.id, {
+      description: this.editDescription,
+      amount: Number(this.editAmount),
+      category: this.editCategory,
+      date: this.editDate,
+      fixed: this.editFixed,
+    });
+    this.editingId.set(null);
+  }
 
   // ============ Filtros y orden ============
   protected readonly typeFilter = signal<TypeFilter>('all');
@@ -276,11 +379,13 @@ export class TransactionList {
     this.sort.set(v);
   }
 
-  /** Categorías únicas presentes en las entradas del mes. */
+  /** Categorías únicas presentes en las entradas del mes — devuelve {id, name} para mostrar el nombre. */
   protected readonly availableCategories = computed(() => {
-    const set = new Set<string>();
-    this.tx.monthlyEntries().forEach((e) => set.add(e.category));
-    return Array.from(set).sort();
+    const ids = new Set<string>();
+    this.tx.monthlyEntries().forEach((e) => ids.add(e.category));
+    return Array.from(ids)
+      .map((id) => ({ id, name: this.tx.nameForCategory(id) }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   });
 
   protected readonly anyFilterActive = computed(

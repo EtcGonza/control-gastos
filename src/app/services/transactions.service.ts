@@ -6,13 +6,26 @@ import { RecurringTemplate } from '../models/recurring-template.model';
 import { Saving, SavingMovement, SavingMovementType } from '../models/saving.model';
 import { Subscription } from '../models/subscription.model';
 import {
-  CATEGORY_COLORS,
   Category,
-  EXPENSE_CATEGORIES,
-  INCOME_CATEGORIES,
+  DEFAULT_CATEGORIES,
+  DEFAULT_CATEGORIES_BY_ID,
+  DEFAULT_EXPENSE_CATEGORIES,
+  DEFAULT_INCOME_CATEGORIES,
+  DefaultCategoryDef,
+  FALLBACK_EXPENSE_CATEGORY_ID,
+  FALLBACK_INCOME_CATEGORY_ID,
+  SUBSCRIPTION_CATEGORY_ID,
   Transaction,
   TransactionType,
+  UNKNOWN_CATEGORY_ID,
 } from '../models/transaction.model';
+
+/** Vista combinada de categoría — sirve para defaults y customs por igual. */
+export interface CategoryView {
+  id: string;
+  name: string;
+  color: string;
+}
 
 const STORAGE_KEY = 'control-gastos:transactions';
 const TEMPLATES_KEY = 'control-gastos:templates';
@@ -107,11 +120,24 @@ export class TransactionsService {
   private readonly _rates = signal<Record<string, number>>(this.loadRates());
   readonly rates = this._rates.asReadonly();
 
-  /** Categorías personalizadas creadas por el usuario. */
+  /** Categorías personalizadas creadas por el usuario (incluye archivadas). */
   private readonly _customCategories = signal<CustomCategory[]>(
     this.load<CustomCategory>(CUSTOM_CATEGORIES_KEY)
   );
   readonly customCategories = this._customCategories.asReadonly();
+
+  /**
+   * Reporte de la última corrida de migración. Si > 0 registros fueron
+   * asignados a "Desconocido" se setea con el conteo. Un consumidor (típicamente
+   * el AppComponent) debería observarlo y mostrar un aviso al usuario, luego
+   * llamar `acknowledgeMigrationReport()` para limpiarlo.
+   */
+  private readonly _migrationReport = signal<{ unknownCount: number } | null>(null);
+  readonly migrationReport = this._migrationReport.asReadonly();
+
+  acknowledgeMigrationReport(): void {
+    this._migrationReport.set(null);
+  }
 
   /** Ahorros declarados por el usuario (en ARS o USD). */
   private readonly _savings = signal<Saving[]>(this.load<Saving>(SAVINGS_KEY));
@@ -125,6 +151,9 @@ export class TransactionsService {
   readonly selectedMonth = this._selectedMonth.asReadonly();
 
   constructor() {
+    // Migración de category: nombre → ID (corre una vez al iniciar; idempotente)
+    this.migrateCategoryNamesToIds();
+
     // Cuando cambian las entradas mensuales (mes o data), aseguramos que
     // las cotizaciones necesarias estén pedidas. No tocamos otros signals
     // sincrónicamente — los fetches actualizan _rates en otra microtarea.
@@ -206,7 +235,7 @@ export class TransactionsService {
         type: 'gasto',
         description: s.description,
         amount: s.amount,
-        category: 'Suscripciones',
+        category: SUBSCRIPTION_CATEGORY_ID,
         date: s.chargeDate,
         fixed: true,
         currency: s.currency,
@@ -417,6 +446,29 @@ export class TransactionsService {
         amount: tx.amount,
       });
     }
+  }
+
+  /**
+   * Actualiza campos de una transacción manual. Si cambia el flag `fixed`
+   * el caller decide si quiere upsertar/borrar una plantilla por separado;
+   * acá no hay magia.
+   */
+  updateTransaction(
+    id: string,
+    patch: Partial<Pick<Transaction, 'description' | 'amount' | 'category' | 'date' | 'fixed'>>
+  ): void {
+    this._transactions.update((list) =>
+      list.map((t) =>
+        t.id === id
+          ? {
+              ...t,
+              ...patch,
+              description: patch.description?.trim() ?? t.description,
+            }
+          : t
+      )
+    );
+    this.persist(STORAGE_KEY, this._transactions());
   }
 
   remove(id: string): void {
@@ -882,32 +934,51 @@ export class TransactionsService {
   }
 
   // ============================================================
-  // Categorías custom
+  // Categorías (defaults + custom)
   // ============================================================
 
-  /** Lista combinada de categorías de gasto: defaults + customs. */
-  readonly allExpenseCategories = computed<Category[]>(() => {
+  /**
+   * Categorías de gasto disponibles en pickers: defaults + customs **no
+   * archivadas**. Las archivadas no aparecen para crear movimientos nuevos
+   * pero siguen siendo resolvibles por ID para mostrarse en registros viejos.
+   */
+  readonly allExpenseCategories = computed<CategoryView[]>(() => {
     const customExp = this._customCategories()
-      .filter((c) => c.type === 'expense')
-      .map((c) => c.name);
-    return [...EXPENSE_CATEGORIES, ...customExp];
+      .filter((c) => c.type === 'expense' && !c.archived)
+      .map((c) => ({ id: c.id, name: c.name, color: c.color }));
+    return [...DEFAULT_EXPENSE_CATEGORIES.map(this.defToView), ...customExp];
   });
 
-  /** Lista combinada de categorías de ingreso: defaults + customs. */
-  readonly allIncomeCategories = computed<Category[]>(() => {
+  /** Categorías de ingreso disponibles en pickers (sin archivadas). */
+  readonly allIncomeCategories = computed<CategoryView[]>(() => {
     const customInc = this._customCategories()
-      .filter((c) => c.type === 'income')
-      .map((c) => c.name);
-    return [...INCOME_CATEGORIES, ...customInc];
+      .filter((c) => c.type === 'income' && !c.archived)
+      .map((c) => ({ id: c.id, name: c.name, color: c.color }));
+    return [...DEFAULT_INCOME_CATEGORIES.map(this.defToView), ...customInc];
   });
 
-  /** Color asociado a una categoría (default o custom). Gris si no se encuentra. */
-  colorForCategory(name: string): string {
-    const def = (CATEGORY_COLORS as Record<string, string>)[name];
-    if (def) return def;
-    const custom = this._customCategories().find((c) => c.name === name);
-    if (custom) return custom.color;
-    return '#64748b';
+  /** Convierte un default a la forma común. */
+  private defToView(d: DefaultCategoryDef): CategoryView {
+    return { id: d.id, name: d.name, color: d.color };
+  }
+
+  /** Resuelve un ID a su CategoryView (default o custom). null si no existe. */
+  categoryViewById(id: string): CategoryView | null {
+    const def = DEFAULT_CATEGORIES_BY_ID[id];
+    if (def) return this.defToView(def);
+    const custom = this._customCategories().find((c) => c.id === id);
+    if (custom) return { id: custom.id, name: custom.name, color: custom.color };
+    return null;
+  }
+
+  /** Nombre de display de una categoría por ID. "Sin categoría" si no existe. */
+  nameForCategory(id: string): string {
+    return this.categoryViewById(id)?.name ?? 'Sin categoría';
+  }
+
+  /** Color de una categoría por ID. Gris si no existe. */
+  colorForCategory(id: string): string {
+    return this.categoryViewById(id)?.color ?? '#64748b';
   }
 
   /** Crea una nueva categoría custom. Rechaza si el nombre ya existe en su tipo. */
@@ -919,17 +990,7 @@ export class TransactionsService {
     const name = input.name.trim();
     if (!name) return null;
 
-    // Evitar duplicados case-insensitive contra defaults y customs del mismo tipo
-    const defaults = input.type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
-    const lower = name.toLowerCase();
-    if (defaults.some((d) => d.toLowerCase() === lower)) return null;
-    if (
-      this._customCategories().some(
-        (c) => c.type === input.type && c.name.toLowerCase() === lower
-      )
-    ) {
-      return null;
-    }
+    if (this.nameExistsInType(name, input.type)) return null;
 
     const cat: CustomCategory = {
       id: crypto.randomUUID(),
@@ -943,10 +1004,82 @@ export class TransactionsService {
     return cat;
   }
 
-  /** Elimina una categoría custom. Las transacciones que la usaban no se tocan. */
-  removeCustomCategory(id: string): void {
-    this._customCategories.update((list) => list.filter((c) => c.id !== id));
+  /**
+   * Edita nombre y/o color de una categoría custom. Las transacciones que la
+   * referencian por ID toman el cambio automáticamente (display).
+   * Devuelve true si pudo actualizar, false si hay conflicto de nombre.
+   */
+  updateCustomCategory(
+    id: string,
+    patch: { name?: string; color?: string }
+  ): boolean {
+    const current = this._customCategories().find((c) => c.id === id);
+    if (!current) return false;
+
+    const trimmed = patch.name?.trim();
+    if (trimmed !== undefined && trimmed !== current.name) {
+      if (!trimmed) return false;
+      if (this.nameExistsInType(trimmed, current.type, id)) return false;
+    }
+
+    this._customCategories.update((list) =>
+      list.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              ...(trimmed !== undefined ? { name: trimmed } : {}),
+              ...(patch.color ? { color: patch.color } : {}),
+            }
+          : c
+      )
+    );
     this.persist(CUSTOM_CATEGORIES_KEY, this._customCategories());
+    return true;
+  }
+
+  /**
+   * "Eliminar" una categoría custom = archivarla (soft delete). Los registros
+   * existentes que la referencian la SIGUEN mostrando con su nombre y color
+   * originales; lo único que cambia es que ya no aparece en los pickers de
+   * nuevas operaciones. Se puede revertir con `reactivateCustomCategory`.
+   */
+  removeCustomCategory(id: string): void {
+    this._customCategories.update((list) =>
+      list.map((c) => (c.id === id ? { ...c, archived: true } : c))
+    );
+    this.persist(CUSTOM_CATEGORIES_KEY, this._customCategories());
+  }
+
+  /** Reactiva una categoría custom archivada. */
+  reactivateCustomCategory(id: string): void {
+    this._customCategories.update((list) =>
+      list.map((c) => {
+        if (c.id !== id) return c;
+        const { archived: _ignored, ...rest } = c;
+        return rest;
+      })
+    );
+    this.persist(CUSTOM_CATEGORIES_KEY, this._customCategories());
+  }
+
+  /** Helper: ¿existe ya el nombre en defaults o customs del mismo type? */
+  private nameExistsInType(
+    name: string,
+    type: CustomCategoryType,
+    excludeId?: string
+  ): boolean {
+    const lower = name.toLowerCase();
+    const defaults =
+      type === 'expense'
+        ? DEFAULT_EXPENSE_CATEGORIES
+        : DEFAULT_INCOME_CATEGORIES;
+    if (defaults.some((d) => d.name.toLowerCase() === lower)) return true;
+    return this._customCategories().some(
+      (c) =>
+        c.type === type &&
+        c.id !== excludeId &&
+        c.name.toLowerCase() === lower
+    );
   }
 
   // ============================================================
@@ -1426,6 +1559,106 @@ export class TransactionsService {
     category: Category
   ): string {
     return `${type}::${category}::${description.trim().toLowerCase()}`;
+  }
+
+  // ============================================================
+  // Migración runtime: category nombre → ID
+  // ============================================================
+
+  /**
+   * Idempotente. Recorre transactions/templates/purchases y, si la categoría
+   * almacenada no es un ID conocido, intenta resolverla como nombre histórico
+   * y la convierte al ID estable correspondiente.
+   *
+   * Cubre los siguientes escenarios:
+   *  - Defaults pre-refactor: 'Alquiler' → 'cat-alquiler', etc.
+   *  - Subscripciones auto-generadas viejas: 'Suscripciones' → 'cat-suscripciones'
+   *  - Customs por nombre: matchea contra las customs existentes y usa su UUID
+   *  - Categorías inválidas u orphanes: cae a 'cat-otros' (gastos) o
+   *    'cat-otros-ingreso' (ingresos)
+   */
+  private migrateCategoryNamesToIds(): void {
+    // Set de IDs conocidos (defaults + customs actuales)
+    const knownIds = new Set<string>(
+      DEFAULT_CATEGORIES.map((c) => c.id).concat(
+        this._customCategories().map((c) => c.id)
+      )
+    );
+
+    // Mapa nombre lowercase → ID
+    const nameToId = new Map<string, string>();
+    for (const def of DEFAULT_CATEGORIES) {
+      nameToId.set(def.name.toLowerCase(), def.id);
+    }
+    for (const c of this._customCategories()) {
+      nameToId.set(c.name.toLowerCase(), c.id);
+    }
+
+    /**
+     * Contador de registros que no se pudieron resolver por nombre conocido
+     * y terminaron asignados a UNKNOWN_CATEGORY_ID. Lo reportamos al final
+     * para que el componente raíz informe al usuario.
+     */
+    let unknownCount = 0;
+
+    const resolve = (val: string | undefined | null): string => {
+      const s = (val ?? '').trim();
+      if (s && knownIds.has(s)) return s; // ya es un ID conocido (no migra)
+      const byName = nameToId.get(s.toLowerCase());
+      if (byName) return byName;
+      // No matchea nada → marcamos como Desconocido
+      unknownCount++;
+      return UNKNOWN_CATEGORY_ID;
+    };
+
+    // Transactions
+    let txChanged = false;
+    const newTxs = this._transactions().map((t) => {
+      const newCat = resolve(t.category);
+      if (newCat !== t.category) {
+        txChanged = true;
+        return { ...t, category: newCat };
+      }
+      return t;
+    });
+    if (txChanged) {
+      this._transactions.set(newTxs);
+      this.persist(STORAGE_KEY, newTxs);
+    }
+
+    // Templates
+    let tplChanged = false;
+    const newTpls = this._templates().map((t) => {
+      const newCat = resolve(t.category);
+      if (newCat !== t.category) {
+        tplChanged = true;
+        return { ...t, category: newCat };
+      }
+      return t;
+    });
+    if (tplChanged) {
+      this._templates.set(newTpls);
+      this.persist(TEMPLATES_KEY, newTpls);
+    }
+
+    // Purchases (siempre gastos)
+    let purChanged = false;
+    const newPurs = this._purchases().map((p) => {
+      const newCat = resolve(p.category);
+      if (newCat !== p.category) {
+        purChanged = true;
+        return { ...p, category: newCat };
+      }
+      return p;
+    });
+    if (purChanged) {
+      this._purchases.set(newPurs);
+      this.persist(PURCHASES_KEY, newPurs);
+    }
+
+    if (unknownCount > 0) {
+      this._migrationReport.set({ unknownCount });
+    }
   }
 
   // ============================================================

@@ -23,7 +23,7 @@ import { TransactionsService } from '../../services/transactions.service';
               <div class="flex justify-between items-center text-sm mb-1">
                 <span class="flex items-center gap-2 text-slate-700">
                   <span class="w-2.5 h-2.5 rounded-full" [style.background-color]="color(item.category)"></span>
-                  {{ item.category }}
+                  {{ tx.nameForCategory(item.category) }}
                 </span>
                 <span class="text-slate-500 font-medium">
                   {{ item.total | currency:'USD':'symbol':'1.0-0' }}

@@ -84,14 +84,14 @@ import { TransactionsService } from '../../services/transactions.service';
             <li class="border border-slate-100 rounded-xl p-3 hover:border-indigo-200 transition group">
               <div class="flex items-center gap-3">
                 <span class="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                      [style.background-color]="color(t.category)">
-                  {{ t.category[0] }}
+                      [style.background-color]="tx.colorForCategory(t.category)">
+                  {{ tx.nameForCategory(t.category).charAt(0) }}
                 </span>
 
                 <div class="flex-1 min-w-0">
                   <p class="font-medium text-slate-800 truncate text-sm">{{ t.description }}</p>
                   <p class="text-[11px] text-slate-400">
-                    {{ t.category }} ·
+                    {{ tx.nameForCategory(t.category) }} ·
                     <span [ngClass]="t.type === 'ingreso' ? 'text-emerald-600' : 'text-rose-600'">
                       {{ t.type === 'ingreso' ? 'Ingreso' : 'Gasto' }} fijo
                     </span>

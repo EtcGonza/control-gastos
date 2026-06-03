@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, effect, inject } from '@angular/core';
+import { ConfirmService } from './services/confirm.service';
 import { Analytics } from './components/analytics/analytics';
 import { CardsManager } from './components/cards-manager/cards-manager';
 import { CategoriesManager } from './components/categories-manager/categories-manager';
@@ -67,6 +68,26 @@ const SECTIONS_WITH_MONTH: NavSection[] = ['mes', 'analisis'];
 export class App {
   protected readonly tx = inject(TransactionsService);
   protected readonly nav = inject(NavigationService);
+  private readonly confirmSvc = inject(ConfirmService);
+
+  constructor() {
+    // Si la migración de categorías nombre → ID encontró registros que no se
+    // pudieron resolver, mostramos un aviso UNA vez y limpiamos el report.
+    effect(() => {
+      const report = this.tx.migrationReport();
+      if (!report || report.unknownCount === 0) return;
+      const n = report.unknownCount;
+      this.confirmSvc
+        .alert({
+          title: 'Categorías desconocidas detectadas',
+          message:
+            `Se encontraron ${n} ${n === 1 ? 'registro' : 'registros'} con una categoría que no pudo identificarse al migrar tus datos.\n\n` +
+            'Estos registros quedaron asignados temporalmente a la categoría "Desconocido". ' +
+            'Te recomendamos revisarlos en la sección Mes y editarlos para asignarles una categoría correcta.',
+        })
+        .then(() => this.tx.acknowledgeMigrationReport());
+    });
+  }
 
   protected readonly sectionLabel = computed(
     () => SECTION_LABELS[this.nav.section()]
