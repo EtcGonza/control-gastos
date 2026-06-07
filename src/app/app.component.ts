@@ -1,24 +1,18 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject } from '@angular/core';
-import { ConfirmService } from './services/confirm.service';
-import { Analytics } from './components/analytics/analytics';
-import { CardsManager } from './components/cards-manager/cards-manager';
-import { CategoriesManager } from './components/categories-manager/categories-manager';
-import { CategoryBreakdown } from './components/category-breakdown/category-breakdown';
-import { ConfirmHost } from './components/confirm-host/confirm-host';
-import { DataBackup } from './components/data-backup/data-backup';
-import { MonthSelector } from './components/month-selector/month-selector';
-import { RecurringTemplates } from './components/recurring-templates/recurring-templates';
-import { Savings } from './components/savings/savings';
-import { Sidebar } from './components/sidebar/sidebar';
-// import { ThemePicker } from './components/theme-picker/theme-picker'; // deshabilitado temporalmente
-import { SubscriptionsManager } from './components/subscriptions-manager/subscriptions-manager';
-import { SummaryCards } from './components/summary-cards/summary-cards';
-import { TransactionForm } from './components/transaction-form/transaction-form';
-import { TransactionList } from './components/transaction-list/transaction-list';
-import { UsdSummary } from './components/usd-summary/usd-summary';
-import { NavigationService, NavSection } from './services/navigation.service';
-import { TransactionsService } from './services/transactions.service';
+import { ConfirmService } from './core/services/confirm.service';
+import { NavigationService, NavSection } from './core/services/navigation.service';
+import { TransactionsService } from './core/services/transactions.service';
+import { AhorrosPageComponent } from './pages/ahorros-page/ahorros-page.component';
+import { AnalisisPageComponent } from './pages/analisis-page/analisis-page.component';
+import { ConfiguracionPageComponent } from './pages/configuracion-page/configuracion-page.component';
+import { MesPageComponent } from './pages/mes-page/mes-page.component';
+import { SuscripcionesPageComponent } from './pages/suscripciones-page/suscripciones-page.component';
+import { TarjetasPageComponent } from './pages/tarjetas-page/tarjetas-page.component';
+import { ConfirmHostComponent } from './shared/components/confirm-host/confirm-host.component';
+import { MonthSelectorComponent } from './shared/components/month-selector/month-selector.component';
+import { SidebarComponent } from './shared/components/sidebar/sidebar.component';
+// import { ThemePickerComponent } from './shared/components/theme-picker/theme-picker.component'; // deshabilitado temporalmente
 
 const SECTION_LABELS: Record<NavSection, string> = {
   mes: 'Mes',
@@ -46,22 +40,16 @@ const SECTIONS_WITH_MONTH: NavSection[] = ['mes', 'analisis'];
   standalone: true,
   imports: [
     CommonModule,
-    Sidebar,
-    SummaryCards,
-    TransactionForm,
-    TransactionList,
-    CategoryBreakdown,
-    MonthSelector,
-    RecurringTemplates,
-    CardsManager,
-    SubscriptionsManager,
-    UsdSummary,
-    CategoriesManager,
-    DataBackup,
-    Analytics,
-    Savings,
-    ConfirmHost,
-    // ThemePicker, // deshabilitado temporalmente
+    SidebarComponent,
+    MonthSelectorComponent,
+    ConfirmHostComponent,
+    MesPageComponent,
+    TarjetasPageComponent,
+    SuscripcionesPageComponent,
+    AhorrosPageComponent,
+    AnalisisPageComponent,
+    ConfiguracionPageComponent,
+    // ThemePickerComponent, // deshabilitado temporalmente
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],

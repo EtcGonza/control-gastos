@@ -1,28 +1,28 @@
 import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
-import { DEFAULT_CATEGORIES } from '../core/constants/default-categories';
-import { STORAGE_KEYS } from '../core/constants/storage-keys';
-import { CustomCategory, CustomCategoryType } from '../core/models/category/custom-category.model';
-import { CardPurchase, Currency, Installment, SurchargeMode } from '../core/models/credit-card/card-purchase.model';
-import { CreditCard } from '../core/models/credit-card/credit-card.model';
-import { RecurringTemplate } from '../core/models/recurring-template/recurring-template.model';
-import { Saving, SavingMovement, SavingMovementType } from '../core/models/saving/saving.model';
-import { Subscription } from '../core/models/subscription/subscription.model';
+import { DEFAULT_CATEGORIES } from '../constants/default-categories';
+import { STORAGE_KEYS } from '../constants/storage-keys';
+import { CustomCategory, CustomCategoryType } from '../models/category/custom-category.model';
+import { CardPurchase, Currency, Installment, SurchargeMode } from '../models/credit-card/card-purchase.model';
+import { CreditCard } from '../models/credit-card/credit-card.model';
+import { RecurringTemplate } from '../models/recurring-template/recurring-template.model';
+import { Saving, SavingMovement, SavingMovementType } from '../models/saving/saving.model';
+import { Subscription } from '../models/subscription/subscription.model';
 import {
   Category,
   SUBSCRIPTION_CATEGORY_ID,
   Transaction,
   TransactionType,
   UNKNOWN_CATEGORY_ID,
-} from '../core/models/transaction/transaction.model';
-import { BackupService, DataCounts, ExportFile } from '../core/services/backup.service';
-import { CardsService } from '../core/services/cards.service';
-import { CategoriesService, CategoryView } from '../core/services/categories.service';
-import { MonthService } from '../core/services/month.service';
-import { RecurringTemplatesService } from '../core/services/recurring-templates.service';
-import { SavingsService } from '../core/services/savings.service';
-import { StorageService } from '../core/services/storage.service';
-import { SubscriptionsService } from '../core/services/subscriptions.service';
-import { ArsConversionResult, UsdConversion, UsdRateService } from '../core/services/usd-rate.service';
+} from '../models/transaction/transaction.model';
+import { BackupService, DataCounts, ExportFile } from './backup.service';
+import { CardsService } from './cards.service';
+import { CategoriesService, CategoryView } from './categories.service';
+import { MonthService } from './month.service';
+import { RecurringTemplatesService } from './recurring-templates.service';
+import { SavingsService } from './savings.service';
+import { StorageService } from './storage.service';
+import { SubscriptionsService } from './subscriptions.service';
+import { ArsConversionResult, UsdConversion, UsdRateService } from './usd-rate.service';
 
 /** Una fila de la lista mensual: puede ser una transacción real, una cuota o un cobro de suscripción. */
 export interface MonthlyEntry {
@@ -52,9 +52,9 @@ export interface MonthlyEntry {
 }
 
 // Re-exports para compat con componentes existentes.
-export type { ArsConversionResult, UsdConversion } from '../core/services/usd-rate.service';
-export type { CategoryView } from '../core/services/categories.service';
-export type { ExportFile, DataCounts } from '../core/services/backup.service';
+export type { ArsConversionResult, UsdConversion } from './usd-rate.service';
+export type { CategoryView } from './categories.service';
+export type { ExportFile, DataCounts } from './backup.service';
 
 /**
  * Servicio orquestador.
