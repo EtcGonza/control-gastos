@@ -1,0 +1,271 @@
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
+  <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+    <span class="w-8 h-8 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </span>
+    Simular compra
+  </h2>
+
+  <!-- Tabs tipo de compra -->
+  <div class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl">
+    <button type="button" (click)="setType('contado')"
+            class="py-2 rounded-lg text-xs font-semibold transition"
+            [ngClass]="type() === 'contado' ? 'bg-white shadow text-slate-700' : 'text-slate-500'">
+      Contado
+    </button>
+    <button type="button" (click)="setType('cuotas')"
+            class="py-2 rounded-lg text-xs font-semibold transition"
+            [ngClass]="type() === 'cuotas' ? 'bg-white shadow text-purple-600' : 'text-slate-500'">
+      Cuotas
+    </button>
+    <button type="button" (click)="setType('suscripcion')"
+            class="py-2 rounded-lg text-xs font-semibold transition"
+            [ngClass]="type() === 'suscripcion' ? 'bg-white shadow text-pink-600' : 'text-slate-500'">
+      Suscripción
+    </button>
+  </div>
+
+  <!-- Descripción -->
+  <div>
+    <label class="block text-xs font-medium text-slate-600 mb-1">
+      Descripción <span class="text-slate-400">(opcional)</span>
+    </label>
+    <input type="text" [(ngModel)]="description" (ngModelChange)="emitChange()"
+           placeholder="Ej: iPhone, vuelo, Netflix..."
+           class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+  </div>
+
+  <!-- Monto + moneda -->
+  <div class="grid grid-cols-3 gap-2">
+    <div class="col-span-2">
+      <label class="block text-xs font-medium text-slate-600 mb-1">
+        @switch (type()) {
+          @case ('contado') { Monto total }
+          @case ('cuotas') { Total a debitar }
+          @case ('suscripcion') { Monto mensual }
+        }
+      </label>
+      <input type="number" min="0" step="0.01" [(ngModel)]="amount" (ngModelChange)="emitChange()"
+             class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-slate-600 mb-1">Moneda</label>
+      <div class="flex bg-slate-100 p-1 rounded-xl">
+        <button type="button" (click)="setCurrency('ARS')"
+                class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition"
+                [ngClass]="currency() === 'ARS' ? 'bg-white shadow text-slate-700' : 'text-slate-500'">
+          ARS
+        </button>
+        <button type="button" (click)="setCurrency('USD')"
+                class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition"
+                [ngClass]="currency() === 'USD' ? 'bg-white shadow text-slate-700' : 'text-slate-500'">
+          USD
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modo de recargo (sólo USD) -->
+  @if (currency() === 'USD') {
+    <div>
+      <label class="block text-xs font-medium text-slate-600 mb-1">Tipo de gasto USD</label>
+      <div class="space-y-1">
+        <button type="button" (click)="setSurchargeMode('auto')"
+                class="w-full text-left p-2 rounded-lg border text-xs transition"
+                [ngClass]="surchargeMode() === 'auto'
+                  ? 'border-violet-500 bg-violet-50 text-violet-700'
+                  : 'border-slate-200 text-slate-600 hover:border-slate-300'">
+          <b>Compra normal</b>
+          <span class="block text-slate-400">Producto físico del exterior. Sin recargo desde Ene 2026.</span>
+        </button>
+        <button type="button" (click)="setSurchargeMode('digital-service')"
+                class="w-full text-left p-2 rounded-lg border text-xs transition"
+                [ngClass]="surchargeMode() === 'digital-service'
+                  ? 'border-violet-500 bg-violet-50 text-violet-700'
+                  : 'border-slate-200 text-slate-600 hover:border-slate-300'">
+          <b>Servicio digital (+21%)</b>
+          <span class="block text-slate-400">Netflix, Spotify, Adobe, etc.</span>
+        </button>
+        <button type="button" (click)="setSurchargeMode('tourism')"
+                class="w-full text-left p-2 rounded-lg border text-xs transition"
+                [ngClass]="surchargeMode() === 'tourism'
+                  ? 'border-violet-500 bg-violet-50 text-violet-700'
+                  : 'border-slate-200 text-slate-600 hover:border-slate-300'">
+          <b>Turístico (+30%)</b>
+          <span class="block text-slate-400">Vuelos / hoteles / paquetes.</span>
+        </button>
+        <button type="button" (click)="setSurchargeMode('usd-payment')"
+                class="w-full text-left p-2 rounded-lg border text-xs transition"
+                [ngClass]="surchargeMode() === 'usd-payment'
+                  ? 'border-violet-500 bg-violet-50 text-violet-700'
+                  : 'border-slate-200 text-slate-600 hover:border-slate-300'">
+          <b>Pago resumen en USD</b>
+          <span class="block text-slate-400">No se convierte a pesos.</span>
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Campos por tipo -->
+  @if (type() === 'contado') {
+    <div>
+      <label class="block text-xs font-medium text-slate-600 mb-1">Fecha de compra</label>
+      <input type="date" [(ngModel)]="purchaseDate" (ngModelChange)="emitChange()"
+             class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+    </div>
+  }
+
+  @if (type() === 'cuotas') {
+    <div>
+      <label class="block text-xs font-medium text-slate-600 mb-1">Tarjeta</label>
+      @if (tx.cards().length === 0) {
+        <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">
+          Cargá una tarjeta primero en la sección "Tarjetas".
+        </p>
+      } @else {
+        <select [(ngModel)]="cardId" (ngModelChange)="emitChange()"
+                class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-violet-500">
+          <option value="">— elegir tarjeta —</option>
+          @for (c of tx.cards(); track c.id) {
+            <option [value]="c.id">{{ tx.cardLabel(c) }}</option>
+          }
+        </select>
+      }
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Cuotas</label>
+        <input type="number" min="1" step="1" [(ngModel)]="installments" (ngModelChange)="emitChange()"
+               class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Fecha de compra</label>
+        <input type="date" [(ngModel)]="purchaseDate" (ngModelChange)="emitChange()"
+               class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+      </div>
+    </div>
+    @if (amount && installments && installments > 0) {
+      <p class="text-[11px] text-slate-500 bg-slate-50 rounded-lg px-3 py-2">
+        {{ installments }} cuotas de
+        <b>{{ currency() === 'USD' ? 'US$' : '$' }}{{ (amount / installments) | number:'1.2-2' }}</b>
+      </p>
+    }
+  }
+
+  @if (type() === 'suscripcion') {
+    <div>
+      <label class="block text-xs font-medium text-slate-600 mb-1">Tarjeta</label>
+      @if (tx.cards().length === 0) {
+        <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">
+          Cargá una tarjeta primero en la sección "Tarjetas".
+        </p>
+      } @else {
+        <select [(ngModel)]="subscriptionCardId" (ngModelChange)="emitChange()"
+                class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-violet-500">
+          <option value="">— elegir tarjeta —</option>
+          @for (c of tx.cards(); track c.id) {
+            <option [value]="c.id">{{ tx.cardLabel(c) }}</option>
+          }
+        </select>
+      }
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Primer cobro</label>
+        <input type="date" [(ngModel)]="startDate" (ngModelChange)="emitChange()"
+               class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">
+          Cancelación <span class="text-slate-400">(opcional)</span>
+        </label>
+        <input type="date" [(ngModel)]="cancelDate" (ngModelChange)="emitChange()"
+               class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+      </div>
+    </div>
+  }
+
+  <!-- ===== Configuración de la proyección ===== -->
+  <div class="border-t border-slate-100 pt-4">
+    <button type="button" (click)="configOpen.set(!configOpen())"
+            class="w-full flex items-center justify-between text-left text-sm font-semibold text-slate-700 hover:text-violet-600 transition">
+      <span class="flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 1v6m0 10v6M4.22 4.22l4.24 4.24m7.08 7.08 4.24 4.24M1 12h6m10 0h6M4.22 19.78l4.24-4.24m7.08-7.08 4.24-4.24"/>
+        </svg>
+        Configuración de la proyección
+      </span>
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transition-transform"
+           [class.rotate-180]="configOpen()"
+           viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </button>
+
+    @if (configOpen()) {
+      <div class="mt-3 space-y-3">
+        <!-- Horizonte -->
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Horizonte</label>
+          <div class="grid grid-cols-4 gap-1 bg-slate-100 p-1 rounded-xl">
+            @for (h of horizonOptions; track h) {
+              <button type="button" (click)="setHorizon(h)"
+                      class="py-1.5 rounded-lg text-xs font-semibold transition"
+                      [ngClass]="horizonMonths() === h ? 'bg-white shadow text-violet-600' : 'text-slate-500'">
+                {{ h }} m
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Base de ingresos -->
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Base de ingresos</label>
+          <div class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl">
+            <button type="button" (click)="setIncomeBase('avg-3m')"
+                    class="py-1.5 rounded-lg text-[11px] font-semibold transition"
+                    [ngClass]="incomeBase() === 'avg-3m' ? 'bg-white shadow text-violet-600' : 'text-slate-500'">
+              Prom. 3m
+            </button>
+            <button type="button" (click)="setIncomeBase('last-month')"
+                    class="py-1.5 rounded-lg text-[11px] font-semibold transition"
+                    [ngClass]="incomeBase() === 'last-month' ? 'bg-white shadow text-violet-600' : 'text-slate-500'">
+              Último mes
+            </button>
+            <button type="button" (click)="setIncomeBase('manual')"
+                    class="py-1.5 rounded-lg text-[11px] font-semibold transition"
+                    [ngClass]="incomeBase() === 'manual' ? 'bg-white shadow text-violet-600' : 'text-slate-500'">
+              Manual
+            </button>
+          </div>
+          @if (incomeBase() === 'manual') {
+            <input type="number" min="0" step="1" [(ngModel)]="manualIncomeArs" (ngModelChange)="emitChange()"
+                   placeholder="Ingresos mensuales en pesos"
+                   class="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+          }
+        </div>
+
+        <!-- Inflación / devaluación -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Inflación mensual %</label>
+            <input type="number" min="0" max="20" step="0.5" [(ngModel)]="monthlyInflationPct" (ngModelChange)="emitChange()"
+                   class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Devaluación mensual %</label>
+            <input type="number" min="0" max="20" step="0.5" [(ngModel)]="monthlyDevaluationPct" (ngModelChange)="emitChange()"
+                   class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+          </div>
+        </div>
+        <p class="text-[10px] text-slate-400">
+          Default 0 → proyección "real" (TC y gastos planos). Subilos para escenarios pesimistas.
+        </p>
+      </div>
+    }
+  </div>
+</div>

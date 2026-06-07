@@ -1,0 +1,33 @@
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Columna izquierda: formulario -->
+  <div class="lg:col-span-1">
+    <app-simulation-form
+      (itemChange)="item.set($event)"
+      (configChange)="config.set($event)">
+    </app-simulation-form>
+  </div>
+
+  <!-- Columna derecha: resultados -->
+  <div class="lg:col-span-2 space-y-6">
+    @if (result(); as r) {
+      <app-simulation-summary [result]="r"></app-simulation-summary>
+      <app-projection-chart [result]="r"></app-projection-chart>
+      <app-projection-table [result]="r"></app-projection-table>
+    } @else {
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center">
+        <span class="inline-flex w-16 h-16 rounded-2xl bg-violet-100 text-violet-600 items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+        </span>
+        <h2 class="text-lg font-bold text-slate-800 mb-2">Aún no hay una simulación</h2>
+        <p class="text-sm text-slate-500 max-w-md mx-auto">
+          Cargá una compra hipotética en el formulario de la izquierda para ver
+          cómo afecta tu flujo mensual proyectado.
+        </p>
+      </div>
+    }
+  </div>
+</div>

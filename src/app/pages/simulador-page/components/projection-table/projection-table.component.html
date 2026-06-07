@@ -1,0 +1,76 @@
+@if (result && result.months.length > 0) {
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-slate-800">Proyección mes a mes</h3>
+      <span class="text-xs text-slate-400">{{ result.months.length }} meses</span>
+    </div>
+
+    <!-- Leyenda de colores -->
+    <div class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-500 mb-3">
+      <span class="flex items-center gap-1.5">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Holgado (&lt;50%)
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Moderado (50–80%)
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Ajustado (&gt;80%) / balance negativo
+      </span>
+    </div>
+
+    <div class="overflow-x-auto -mx-2">
+      <table class="w-full text-xs min-w-[640px]">
+        <thead>
+          <tr class="text-left text-[10px] uppercase text-slate-400 font-semibold border-b border-slate-200">
+            <th class="py-2 px-2">Mes</th>
+            <th class="py-2 px-2 text-right">Ingresos</th>
+            <th class="py-2 px-2 text-right">Fijos actuales</th>
+            <th class="py-2 px-2 text-right">Impacto compra</th>
+            <th class="py-2 px-2 text-right">Total fijos</th>
+            <th class="py-2 px-2 text-right">Balance</th>
+            <th class="py-2 px-2 text-right">% compr.</th>
+            <th class="py-2 px-2 text-right">Δ vs sin compra</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @for (m of result.months; track m.month) {
+            <tr [ngClass]="rowClass(m)">
+              <td class="py-2 px-2 font-semibold text-slate-700">
+                <span class="inline-flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full"
+                        [ngClass]="dotClass(m)"></span>
+                  {{ m.label }}
+                </span>
+              </td>
+              <td class="py-2 px-2 text-right text-slate-700">
+                {{ '$' }}{{ m.projectedIncome | number:'1.0-0' }}
+              </td>
+              <td class="py-2 px-2 text-right text-slate-500">
+                {{ '$' }}{{ m.existingFixedExpenses | number:'1.0-0' }}
+              </td>
+              <td class="py-2 px-2 text-right text-violet-600 font-semibold">
+                +{{ '$' }}{{ m.simulationImpact | number:'1.0-0' }}
+              </td>
+              <td class="py-2 px-2 text-right font-semibold text-slate-700">
+                {{ '$' }}{{ m.totalFixedExpenses | number:'1.0-0' }}
+              </td>
+              <td class="py-2 px-2 text-right font-bold"
+                  [ngClass]="m.isNegative ? 'text-rose-600' : 'text-emerald-600'">
+                {{ '$' }}{{ m.projectedBalance | number:'1.0-0' }}
+              </td>
+              <td class="py-2 px-2 text-right">
+                <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold"
+                      [ngClass]="badgeClass(m)">
+                  {{ m.committedPct | number:'1.0-1' }}%
+                </span>
+              </td>
+              <td class="py-2 px-2 text-right text-rose-500 font-medium">
+                {{ '$' }}{{ (m.projectedBalance - m.baselineBalance) | number:'1.0-0' }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}
