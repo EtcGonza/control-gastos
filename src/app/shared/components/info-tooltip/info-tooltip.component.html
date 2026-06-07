@@ -1,0 +1,14 @@
+<span class="info-wrapper">
+  <button type="button"
+          class="info-badge"
+          [class.active]="visible()"
+          (mouseenter)="hover.set(true)"
+          (mouseleave)="hover.set(false)"
+          (click)="togglePin($event)"
+          aria-label="Más información">
+    i
+  </button>
+  <span class="tooltip" [class.visible]="visible()">
+    <ng-content></ng-content>
+  </span>
+</span>

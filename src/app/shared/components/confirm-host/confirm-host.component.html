@@ -1,0 +1,53 @@
+@if (service.state(); as s) {
+  <div class="overlay" (click)="cancel()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="flex items-start gap-3 mb-5">
+        <span class="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
+              [ngClass]="s.options.variant === 'danger'
+                ? 'bg-rose-100 text-rose-600'
+                : 'bg-indigo-100 text-indigo-600'">
+          @if (s.options.variant === 'danger') {
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          }
+        </span>
+        <div class="flex-1 min-w-0">
+          <h3 class="text-base font-semibold text-slate-800">{{ s.options.title }}</h3>
+          <p class="text-sm text-slate-600 mt-1 whitespace-pre-line">{{ s.options.message }}</p>
+        </div>
+        <button type="button" (click)="cancel()"
+                class="text-slate-400 hover:text-slate-600 transition p-1 -mt-1 -mr-1"
+                aria-label="Cerrar">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="flex justify-end gap-2">
+        @if (!s.options.hideCancel) {
+          <button type="button" (click)="cancel()"
+                  class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
+            {{ s.options.cancelText ?? 'Cancelar' }}
+          </button>
+        }
+        <button type="button" (click)="confirm()"
+                class="px-4 py-2 rounded-xl text-sm font-semibold text-white transition"
+                [ngClass]="s.options.variant === 'danger'
+                  ? 'bg-rose-600 hover:bg-rose-700'
+                  : 'bg-indigo-600 hover:bg-indigo-700'">
+          {{ s.options.confirmText ?? 'Confirmar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
