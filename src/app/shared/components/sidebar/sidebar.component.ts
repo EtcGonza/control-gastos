@@ -23,6 +23,7 @@ export class SidebarComponent {
     { id: 'suscripciones', label: 'Suscripciones' },
     { id: 'ahorros', label: 'Ahorros' },
     { id: 'analisis', label: 'Análisis' },
+    { id: 'simulador', label: 'Simulador' },
     { id: 'configuracion', label: 'Configuración' },
   ];
 

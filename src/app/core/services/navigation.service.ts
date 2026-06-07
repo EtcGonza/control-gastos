@@ -6,6 +6,7 @@ export type NavSection =
   | 'suscripciones'
   | 'ahorros'
   | 'analisis'
+  | 'simulador'
   | 'configuracion';
 
 const STORAGE_KEY = 'control-gastos:nav-section';
@@ -15,6 +16,7 @@ const VALID_SECTIONS: NavSection[] = [
   'suscripciones',
   'ahorros',
   'analisis',
+  'simulador',
   'configuracion',
 ];
 

@@ -7,6 +7,7 @@ import { AhorrosPageComponent } from './pages/ahorros-page/ahorros-page.componen
 import { AnalisisPageComponent } from './pages/analisis-page/analisis-page.component';
 import { ConfiguracionPageComponent } from './pages/configuracion-page/configuracion-page.component';
 import { MesPageComponent } from './pages/mes-page/mes-page.component';
+import { SimuladorPageComponent } from './pages/simulador-page/simulador-page.component';
 import { SuscripcionesPageComponent } from './pages/suscripciones-page/suscripciones-page.component';
 import { TarjetasPageComponent } from './pages/tarjetas-page/tarjetas-page.component';
 import { ConfirmHostComponent } from './shared/components/confirm-host/confirm-host.component';
@@ -20,6 +21,7 @@ const SECTION_LABELS: Record<NavSection, string> = {
   suscripciones: 'Suscripciones',
   ahorros: 'Ahorros',
   analisis: 'Análisis',
+  simulador: 'Simulador',
   configuracion: 'Configuración',
 };
 
@@ -29,6 +31,7 @@ const SECTION_SUBTITLES: Record<NavSection, string> = {
   suscripciones: 'Suscripciones activas y canceladas',
   ahorros: 'Tus ahorros en pesos y dólares',
   analisis: 'Visualizaciones y tendencias',
+  simulador: 'Proyectá el impacto de una compra futura',
   configuracion: 'Categorías y respaldo de datos',
 };
 
@@ -48,6 +51,7 @@ const SECTIONS_WITH_MONTH: NavSection[] = ['mes', 'analisis'];
     SuscripcionesPageComponent,
     AhorrosPageComponent,
     AnalisisPageComponent,
+    SimuladorPageComponent,
     ConfiguracionPageComponent,
     // ThemePickerComponent, // deshabilitado temporalmente
   ],
