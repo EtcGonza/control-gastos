@@ -1,0 +1,298 @@
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+  <button type="button" (click)="toggleExpanded()"
+          class="w-full flex items-center justify-between text-left"
+          [class.mb-4]="expanded()">
+    <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+      <span class="w-8 h-8 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+      </span>
+      Análisis
+    </h2>
+    <span class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 transition">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transition-transform"
+           [class.rotate-180]="expanded()"
+           viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </span>
+  </button>
+
+  @if (expanded()) {
+    <div class="space-y-8">
+
+      <!-- ===== Trend mensual: ingresos / gastos / balance ===== -->
+      <section>
+        <h3 class="text-sm font-semibold text-slate-700 mb-3">
+          Ingresos, gastos y balance · últimos 12 meses
+        </h3>
+
+        @if (hasAnyMonthlyData()) {
+          <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 mb-3">
+            <span class="flex items-center gap-1.5">
+              <span class="w-3 h-0.5 bg-emerald-500"></span> Ingresos
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="w-3 h-0.5 bg-rose-500"></span> Gastos
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="w-3 h-0.5 bg-indigo-500"></span> Balance
+            </span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <svg [attr.viewBox]="'0 0 ' + trendW + ' ' + trendH"
+                 class="w-full h-[280px] min-w-[640px]"
+                 preserveAspectRatio="xMidYMid meet">
+              @for (gy of trendGridY(); track gy.y) {
+                <line [attr.x1]="trendPadL" [attr.x2]="trendW - trendPadR"
+                      [attr.y1]="gy.y" [attr.y2]="gy.y"
+                      stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2 3"/>
+                <text [attr.x]="trendPadL - 6" [attr.y]="gy.y + 3"
+                      text-anchor="end" font-size="10" fill="#94a3b8">
+                  {{ formatCompact(gy.value) }}
+                </text>
+              }
+
+              @if (trendHasNegative()) {
+                <line [attr.x1]="trendPadL" [attr.x2]="trendW - trendPadR"
+                      [attr.y1]="trendZeroY()" [attr.y2]="trendZeroY()"
+                      stroke="#cbd5e1" stroke-width="1"/>
+              }
+
+              @for (p of monthlyTrend(); track p.month; let i = $index) {
+                <text [attr.x]="trendX(i)" [attr.y]="trendH - 8"
+                      text-anchor="middle" font-size="10" fill="#64748b">
+                  {{ p.label }}
+                </text>
+              }
+
+              <path [attr.d]="trendAreaPath('expenses')"
+                    fill="#fda4af" fill-opacity="0.15"/>
+              <path [attr.d]="trendLinePath('expenses')"
+                    fill="none" stroke="#e11d48" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+
+              <path [attr.d]="trendAreaPath('income')"
+                    fill="#86efac" fill-opacity="0.15"/>
+              <path [attr.d]="trendLinePath('income')"
+                    fill="none" stroke="#059669" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+
+              <path [attr.d]="trendLinePath('balance')"
+                    fill="none" stroke="#6366f1" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round"
+                    stroke-dasharray="4 3"/>
+
+              @for (p of monthlyTrend(); track p.month; let i = $index) {
+                <circle [attr.cx]="trendX(i)" [attr.cy]="trendY(p.income)"
+                        r="3" fill="#059669"/>
+                <circle [attr.cx]="trendX(i)" [attr.cy]="trendY(p.expenses)"
+                        r="3" fill="#e11d48"/>
+                <circle [attr.cx]="trendX(i)" [attr.cy]="trendY(p.balance)"
+                        r="3" fill="#6366f1"/>
+              }
+
+              @for (p of monthlyTrend(); track p.month; let i = $index) {
+                <g class="cursor-pointer">
+                  <rect [attr.x]="trendX(i) - trendStep() / 2"
+                        [attr.y]="trendPadT"
+                        [attr.width]="trendStep()"
+                        [attr.height]="trendH - trendPadT - trendPadB"
+                        fill="transparent"
+                        (mouseenter)="hoverIdx.set(i)"
+                        (mouseleave)="hoverIdx.set(null)"/>
+                </g>
+              }
+
+              @if (hoverIdx() !== null) {
+                <line [attr.x1]="trendX(hoverIdx()!)" [attr.x2]="trendX(hoverIdx()!)"
+                      [attr.y1]="trendPadT" [attr.y2]="trendH - trendPadB"
+                      stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 3"/>
+              }
+            </svg>
+          </div>
+
+          @if (hoverIdx() !== null && monthlyTrend()[hoverIdx()!]; as p) {
+            <div class="mt-3 grid grid-cols-3 gap-2 text-xs bg-slate-50 rounded-xl p-3">
+              <div>
+                <p class="text-slate-500">{{ p.label }}</p>
+                <p class="font-semibold text-slate-700">{{ longMonthLabel(p.month) }}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-emerald-600">Ingresos {{ '$' }}{{ p.income | number:'1.0-0' }}</p>
+                <p class="text-rose-600">Gastos {{ '$' }}{{ p.expenses | number:'1.0-0' }}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-slate-500">Balance</p>
+                <p class="font-semibold"
+                   [ngClass]="p.balance >= 0 ? 'text-indigo-600' : 'text-rose-600'">
+                  {{ '$' }}{{ p.balance | number:'1.0-0' }}
+                </p>
+              </div>
+            </div>
+          }
+        } @else {
+          <p class="text-sm text-slate-400 py-6 text-center">
+            Cargá movimientos para ver la evolución mensual.
+          </p>
+        }
+      </section>
+
+      <!-- ===== Donut categorías + Evolución precios subs ===== -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <section>
+          <h3 class="text-sm font-semibold text-slate-700 mb-3">
+            Gastos por categoría · mes actual
+          </h3>
+
+          @if (categorySlices().length > 0) {
+            <div class="flex items-center gap-4 flex-wrap">
+              <svg viewBox="0 0 200 200" class="w-44 h-44 flex-shrink-0">
+                @for (s of categorySlices(); track s.category) {
+                  <path [attr.d]="s.arcPath"
+                        [attr.fill]="s.color"
+                        stroke="#ffffff" stroke-width="2"
+                        (mouseenter)="hoverCat.set(s.category)"
+                        (mouseleave)="hoverCat.set(null)"
+                        class="cursor-pointer transition"
+                        [class.opacity-80]="hoverCat() && hoverCat() !== s.category"/>
+                }
+                <circle cx="100" cy="100" r="48" fill="#ffffff"/>
+                <text x="100" y="95" text-anchor="middle" font-size="10" fill="#64748b">Total</text>
+                <text x="100" y="112" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">
+                  {{ '$' }}{{ categoryTotal() | number:'1.0-0' }}
+                </text>
+              </svg>
+
+              <ul class="flex-1 min-w-[180px] space-y-1 text-xs">
+                @for (s of categorySlices(); track s.category) {
+                  <li class="flex items-center gap-2 cursor-pointer transition"
+                      [class.opacity-50]="hoverCat() && hoverCat() !== s.category"
+                      (mouseenter)="hoverCat.set(s.category)"
+                      (mouseleave)="hoverCat.set(null)">
+                    <span class="w-3 h-3 rounded-sm flex-shrink-0"
+                          [style.background-color]="s.color"></span>
+                    <span class="flex-1 truncate text-slate-700">{{ tx.nameForCategory(s.category) }}</span>
+                    <span class="text-slate-500 font-medium">{{ s.pct | number:'1.0-1' }}%</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          } @else {
+            <p class="text-sm text-slate-400 py-6 text-center">
+              No hay gastos en el mes actual.
+            </p>
+          }
+        </section>
+
+        <section>
+          <h3 class="text-sm font-semibold text-slate-700 mb-3">
+            Evolución del precio de tus suscripciones
+          </h3>
+
+          @if (subEvolutions().length > 0) {
+            <ul class="space-y-2 max-h-72 overflow-y-auto pr-1">
+              @for (sub of subEvolutions(); track sub.sub.id) {
+                <li class="border border-slate-100 rounded-xl p-3">
+                  <div class="flex items-center justify-between gap-2 mb-2">
+                    <div class="min-w-0">
+                      <p class="text-sm font-semibold text-slate-800 truncate">
+                        {{ sub.sub.description }}
+                      </p>
+                      <p class="text-[11px] text-slate-400">
+                        {{ sub.sub.priceHistory.length }} {{ sub.sub.priceHistory.length === 1 ? 'precio' : 'cambios de precio' }}
+                      </p>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-sm font-bold text-slate-800">
+                        {{ sub.sub.currency === 'USD' ? 'US$' : '$' }}{{ sub.currentPrice | number:'1.2-2' }}
+                      </p>
+                      @if (sub.sub.priceHistory.length > 1) {
+                        <p class="text-[11px] font-semibold"
+                           [ngClass]="sub.changePct > 0 ? 'text-rose-600' : sub.changePct < 0 ? 'text-emerald-600' : 'text-slate-400'">
+                          {{ sub.changePct > 0 ? '+' : '' }}{{ sub.changePct | number:'1.0-1' }}%
+                        </p>
+                      }
+                    </div>
+                  </div>
+
+                  @if (sub.sub.priceHistory.length > 1) {
+                    <svg viewBox="0 0 200 40" class="w-full h-10" preserveAspectRatio="none">
+                      <path [attr.d]="sub.sparklinePath"
+                            fill="none" stroke="#6366f1" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round"
+                            vector-effect="non-scaling-stroke"/>
+                      @for (d of sub.sparklineDots; track d.from) {
+                        <circle [attr.cx]="d.x" [attr.cy]="d.y" r="2.5" fill="#6366f1"/>
+                      }
+                    </svg>
+                  } @else {
+                    <p class="text-[11px] text-slate-400 italic">
+                      Sin variaciones de precio.
+                    </p>
+                  }
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="text-sm text-slate-400 py-6 text-center">
+              Cargá suscripciones para ver la evolución de precios.
+            </p>
+          }
+        </section>
+      </div>
+
+      <!-- ===== Total acumulado por suscripción ===== -->
+      <section>
+        <h3 class="text-sm font-semibold text-slate-700 mb-3">
+          Cuánto te costó cada suscripción · acumulado desde el inicio
+        </h3>
+
+        @if (subTotals().length > 0) {
+          <ul class="space-y-2">
+            @for (row of subTotals(); track row.sub.id) {
+              <li>
+                <div class="flex items-center justify-between text-xs mb-1">
+                  <span class="flex items-center gap-2 text-slate-700 truncate">
+                    <span class="font-medium">{{ row.sub.description }}</span>
+                    <span class="text-slate-400">·</span>
+                    <span class="text-slate-400">{{ row.count }} {{ row.count === 1 ? 'cobro' : 'cobros' }}</span>
+                  </span>
+                  <span class="font-semibold text-slate-700 whitespace-nowrap">
+                    {{ row.currency === 'USD' ? 'US$' : '$' }}{{ row.total | number:'1.2-2' }}
+                  </span>
+                </div>
+                <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div class="h-full rounded-full bg-gradient-to-r from-violet-500 to-pink-500 transition-all"
+                       [style.width.%]="row.pctOfMax"></div>
+                </div>
+              </li>
+            }
+          </ul>
+
+          <div class="mt-4 bg-violet-50 border border-violet-100 rounded-xl p-3 text-xs">
+            <p class="text-violet-700">
+              <b>Total acumulado en suscripciones</b>:
+              {{ '$' }}{{ subTotalsArsSum() | number:'1.0-0' }} en pesos
+              @if (subTotalsUsdSum() > 0) {
+                + US{{ '$' }}{{ subTotalsUsdSum() | number:'1.2-2' }}
+              }
+            </p>
+            <p class="text-violet-600/70 mt-1">
+              Se cuentan todos los cobros generados desde el inicio de cada suscripción hasta hoy (o hasta su cancelación).
+            </p>
+          </div>
+        } @else {
+          <p class="text-sm text-slate-400 py-6 text-center">
+            No hay suscripciones cargadas.
+          </p>
+        }
+      </section>
+    </div>
+  }
+</div>

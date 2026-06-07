@@ -41,43 +41,27 @@
       @switch (nav.section()) {
 
         @case ('mes') {
-          <div class="space-y-8">
-            <app-summary-cards></app-summary-cards>
-            <app-usd-summary></app-usd-summary>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div class="lg:col-span-1 space-y-8">
-                <app-transaction-form></app-transaction-form>
-                <app-category-breakdown></app-category-breakdown>
-              </div>
-              <div class="lg:col-span-2 space-y-8">
-                <app-recurring-templates></app-recurring-templates>
-                <app-transaction-list></app-transaction-list>
-              </div>
-            </div>
-          </div>
+          <app-mes-page></app-mes-page>
         }
 
         @case ('tarjetas') {
-          <app-cards-manager></app-cards-manager>
+          <app-tarjetas-page></app-tarjetas-page>
         }
 
         @case ('suscripciones') {
-          <app-subscriptions-manager></app-subscriptions-manager>
+          <app-suscripciones-page></app-suscripciones-page>
         }
 
         @case ('ahorros') {
-          <app-savings></app-savings>
+          <app-ahorros-page></app-ahorros-page>
         }
 
         @case ('analisis') {
-          <app-analytics></app-analytics>
+          <app-analisis-page></app-analisis-page>
         }
 
         @case ('configuracion') {
-          <div class="space-y-6">
-            <app-categories-manager></app-categories-manager>
-            <app-data-backup></app-data-backup>
-          </div>
+          <app-configuracion-page></app-configuracion-page>
         }
 
       }
