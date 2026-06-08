@@ -6,6 +6,12 @@ import { CardPurchase, Currency, Installment, SurchargeMode } from '../models/cr
 import { CreditCard } from '../models/credit-card/credit-card.model';
 import { RecurringTemplate } from '../models/recurring-template/recurring-template.model';
 import { Saving, SavingMovement, SavingMovementType } from '../models/saving/saving.model';
+import {
+  ServiceBill,
+  ServiceForecast,
+  ServicePaymentMethod,
+  UtilityService,
+} from '../models/service/service.model';
 import { Subscription } from '../models/subscription/subscription.model';
 import {
   Category,
@@ -20,14 +26,15 @@ import { CategoriesService, CategoryView } from './categories.service';
 import { MonthService } from './month.service';
 import { RecurringTemplatesService } from './recurring-templates.service';
 import { SavingsService } from './savings.service';
+import { ServicesService } from './services.service';
 import { StorageService } from './storage.service';
 import { SubscriptionsService } from './subscriptions.service';
 import { ArsConversionResult, UsdConversion, UsdRateService } from './usd-rate.service';
 
-/** Una fila de la lista mensual: puede ser una transacción real, una cuota o un cobro de suscripción. */
+/** Una fila de la lista mensual: puede ser una transacción real, una cuota, un cobro de suscripción o una factura de servicio. */
 export interface MonthlyEntry {
   id: string;
-  source: 'transaction' | 'installment' | 'subscription';
+  source: 'transaction' | 'installment' | 'subscription' | 'service';
   type: TransactionType;
   description: string;
   amount: number;
@@ -48,6 +55,12 @@ export interface MonthlyEntry {
   subscription?: {
     cardLabel: string;
     subscriptionId: string;
+  };
+  // sólo para servicios
+  service?: {
+    serviceId: string;
+    billId?: string;
+    estimated: boolean;
   };
 }
 
@@ -78,6 +91,7 @@ export class TransactionsService {
   private readonly cardsSvc = inject(CardsService);
   private readonly subsSvc = inject(SubscriptionsService);
   private readonly savingsSvc = inject(SavingsService);
+  private readonly servicesSvc = inject(ServicesService);
   private readonly templatesSvc = inject(RecurringTemplatesService);
   private readonly backupSvc = inject(BackupService);
 
@@ -246,8 +260,28 @@ export class TransactionsService {
         };
       });
 
-    return [...txEntries, ...instEntries, ...subEntries].sort((a, b) =>
-      b.date.localeCompare(a.date)
+    const serviceCharges = this.servicesSvc.serviceChargesForMonth(month);
+    const serviceEntries: MonthlyEntry[] = serviceCharges.map((s) => ({
+      id: s.billId
+        ? `service-bill-${s.billId}`
+        : `service-est-${s.serviceId}-${s.dueDate}`,
+      source: 'service',
+      type: 'gasto',
+      description: s.serviceName,
+      amount: s.amount,
+      category: s.category,
+      date: s.dueDate,
+      fixed: true,
+      currency: 'ARS', // MVP: servicios siempre en ARS.
+      service: {
+        serviceId: s.serviceId,
+        billId: s.billId,
+        estimated: s.estimated,
+      },
+    }));
+
+    return [...txEntries, ...instEntries, ...subEntries, ...serviceEntries].sort(
+      (a, b) => b.date.localeCompare(a.date)
     );
   }
 
@@ -575,6 +609,54 @@ export class TransactionsService {
   }
   removeSavingMovement(savingId: string, movementId: string): void {
     this.savingsSvc.removeSavingMovement(savingId, movementId);
+  }
+
+  // Servicios (delegate a ServicesService)
+  readonly utilityServices = this.servicesSvc.services;
+  addService(input: {
+    name: string;
+    category: Category;
+    paymentMethod: ServicePaymentMethod;
+    cardId?: string;
+  }): UtilityService | null {
+    return this.servicesSvc.addService(input);
+  }
+  updateService(
+    id: string,
+    patch: Partial<Pick<UtilityService, 'name' | 'category' | 'paymentMethod' | 'cardId'>>
+  ): boolean {
+    return this.servicesSvc.updateService(id, patch);
+  }
+  archiveService(id: string): void {
+    this.servicesSvc.archiveService(id);
+  }
+  reactivateService(id: string): void {
+    this.servicesSvc.reactivateService(id);
+  }
+  removeService(id: string): void {
+    this.servicesSvc.removeService(id);
+  }
+  addServiceBill(
+    serviceId: string,
+    input: { dueDate: string; amount: number; comprobante?: string; notes?: string }
+  ): ServiceBill | null {
+    return this.servicesSvc.addBill(serviceId, input);
+  }
+  updateServiceBill(
+    serviceId: string,
+    billId: string,
+    patch: Partial<Pick<ServiceBill, 'dueDate' | 'amount' | 'comprobante' | 'notes'>>
+  ): void {
+    this.servicesSvc.updateBill(serviceId, billId, patch);
+  }
+  removeServiceBill(serviceId: string, billId: string): void {
+    this.servicesSvc.removeBill(serviceId, billId);
+  }
+  forecastFor(service: UtilityService): ServiceForecast {
+    return this.servicesSvc.forecastFor(service);
+  }
+  chargeMonthFor(service: UtilityService, date: string): string {
+    return this.servicesSvc.chargeMonthFor(service, date);
   }
 
   // Backup
