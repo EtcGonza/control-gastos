@@ -4,6 +4,7 @@ import { RecurringTemplatesComponent } from './components/recurring-templates/re
 import { SummaryCardsComponent } from './components/summary-cards/summary-cards.component';
 import { TransactionFormComponent } from './components/transaction-form/transaction-form.component';
 import { TransactionListComponent } from './components/transaction-list/transaction-list.component';
+import { UpcomingServicesComponent } from './components/upcoming-services/upcoming-services.component';
 import { UsdSummaryComponent } from './components/usd-summary/usd-summary.component';
 
 /**
@@ -16,6 +17,7 @@ import { UsdSummaryComponent } from './components/usd-summary/usd-summary.compon
   imports: [
     SummaryCardsComponent,
     UsdSummaryComponent,
+    UpcomingServicesComponent,
     TransactionFormComponent,
     CategoryBreakdownComponent,
     RecurringTemplatesComponent,
