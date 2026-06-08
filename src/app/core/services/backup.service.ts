@@ -6,16 +6,26 @@ import {
 import { CreditCard } from '../models/credit-card/credit-card.model';
 import { RecurringTemplate } from '../models/recurring-template/recurring-template.model';
 import { Saving } from '../models/saving/saving.model';
+import { UtilityService } from '../models/service/service.model';
 import { Subscription } from '../models/subscription/subscription.model';
 import { Transaction } from '../models/transaction/transaction.model';
 import { CardsService } from './cards.service';
 import { CategoriesService } from './categories.service';
 import { RecurringTemplatesService } from './recurring-templates.service';
 import { SavingsService } from './savings.service';
+import { ServicesService } from './services.service';
 import { SubscriptionsService } from './subscriptions.service';
 import { UsdRateService } from './usd-rate.service';
 
-/** Estructura del archivo de exportación de datos (respaldo). */
+/**
+ * Estructura del archivo de exportación de datos (respaldo).
+ *
+ * **Versiones**:
+ *  - v1: transactions, templates, cards, purchases, subscriptions, rates,
+ *        customCategories (opt), savings (opt).
+ *  - v2: agrega `services` (UtilityService[]). Retrocompat: imports v1
+ *        importan con `services = []`.
+ */
 export interface ExportFile {
   app: 'control-gastos';
   schemaVersion: number;
@@ -29,8 +39,12 @@ export interface ExportFile {
     rates: Record<string, number>;
     customCategories?: CustomCategory[]; // opcional para retrocompat
     savings?: Saving[]; // opcional para retrocompat
+    services?: UtilityService[]; // opcional, presente desde v2
   };
 }
+
+/** Versión actual del schema que produce el export. */
+const CURRENT_SCHEMA_VERSION = 2;
 
 /** Counts por entidad usados por la UI de respaldo. */
 export interface DataCounts {
@@ -42,6 +56,7 @@ export interface DataCounts {
   rates: number;
   customCategories: number;
   savings: number;
+  services: number;
 }
 
 /**
@@ -59,6 +74,7 @@ export class BackupService {
   private readonly savings = inject(SavingsService);
   private readonly templates = inject(RecurringTemplatesService);
   private readonly usdRate = inject(UsdRateService);
+  private readonly services = inject(ServicesService);
 
   /**
    * Accessor a las transacciones (read/write). Lo registra el dueño
@@ -80,7 +96,7 @@ export class BackupService {
   exportData(): ExportFile {
     return {
       app: 'control-gastos',
-      schemaVersion: 1,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       exportedAt: new Date().toISOString(),
       data: {
         transactions: this.txAccessor?.read() ?? [],
@@ -91,6 +107,7 @@ export class BackupService {
         rates: this.usdRate.rates(),
         customCategories: this.categories.customCategories(),
         savings: this.savings.savings(),
+        services: this.services.services(),
       },
     };
   }
@@ -117,6 +134,7 @@ export class BackupService {
       Array.isArray(d.customCategories) ? d.customCategories : []
     );
     this.savings.setSavingsBulk(Array.isArray(d.savings) ? d.savings : []);
+    this.services.setServicesBulk(Array.isArray(d.services) ? d.services : []);
   }
 
   /**
@@ -142,7 +160,7 @@ export class BackupService {
     if (typeof obj['schemaVersion'] !== 'number') {
       return { ok: false, error: 'Falta o es inválido el campo schemaVersion.' };
     }
-    if (obj['schemaVersion'] > 1) {
+    if (obj['schemaVersion'] > CURRENT_SCHEMA_VERSION) {
       return {
         ok: false,
         error: `El archivo fue creado con una versión más nueva (v${obj['schemaVersion']}). Actualizá la app para importarlo.`,
@@ -164,6 +182,7 @@ export class BackupService {
     this.usdRate.setRatesBulk({});
     this.categories.setCustomCategoriesBulk([]);
     this.savings.setSavingsBulk([]);
+    this.services.setServicesBulk([]);
   }
 
   /** Conteo por entidad — útil para mostrar resúmenes. */
@@ -177,6 +196,7 @@ export class BackupService {
       rates: Object.keys(this.usdRate.rates()).length,
       customCategories: this.categories.customCategories().length,
       savings: this.savings.savings().length,
+      services: this.services.services().length,
     };
   }
 }

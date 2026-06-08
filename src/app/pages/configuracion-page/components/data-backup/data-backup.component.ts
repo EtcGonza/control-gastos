@@ -144,6 +144,7 @@ export class DataBackupComponent {
       rates: d.rates && typeof d.rates === 'object' ? Object.keys(d.rates).length : 0,
       customCategories: Array.isArray(d.customCategories) ? d.customCategories.length : 0,
       savings: Array.isArray(d.savings) ? d.savings.length : 0,
+      services: Array.isArray(d.services) ? d.services.length : 0,
     };
   }
 
@@ -156,6 +157,7 @@ export class DataBackupComponent {
     rates: number;
     customCategories: number;
     savings: number;
+    services: number;
   }): string {
     return [
       `${c.transactions} movimientos manuales`,
@@ -163,6 +165,7 @@ export class DataBackupComponent {
       `${c.cards} tarjetas`,
       `${c.purchases} compras con cuotas`,
       `${c.subscriptions} suscripciones`,
+      `${c.services} servicios`,
       `${c.savings} ahorros`,
       `${c.customCategories} categorías custom`,
       `${c.rates} cotizaciones cacheadas`,
