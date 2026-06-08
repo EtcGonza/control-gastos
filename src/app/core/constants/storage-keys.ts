@@ -14,6 +14,7 @@ export const STORAGE_KEYS = {
   rates: 'control-gastos:rates',
   customCategories: 'control-gastos:custom-categories',
   savings: 'control-gastos:savings',
+  services: 'control-gastos:services',
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
