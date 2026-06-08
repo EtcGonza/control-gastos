@@ -21,6 +21,7 @@ export class SidebarComponent {
     { id: 'mes', label: 'Mes' },
     { id: 'tarjetas', label: 'Tarjetas' },
     { id: 'suscripciones', label: 'Suscripciones' },
+    { id: 'servicios', label: 'Servicios' },
     { id: 'ahorros', label: 'Ahorros' },
     { id: 'analisis', label: 'Análisis' },
     { id: 'simulador', label: 'Simulador' },

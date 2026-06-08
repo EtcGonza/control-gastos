@@ -7,6 +7,7 @@ import { AhorrosPageComponent } from './pages/ahorros-page/ahorros-page.componen
 import { AnalisisPageComponent } from './pages/analisis-page/analisis-page.component';
 import { ConfiguracionPageComponent } from './pages/configuracion-page/configuracion-page.component';
 import { MesPageComponent } from './pages/mes-page/mes-page.component';
+import { ServiciosPageComponent } from './pages/servicios-page/servicios-page.component';
 import { SimuladorPageComponent } from './pages/simulador-page/simulador-page.component';
 import { SuscripcionesPageComponent } from './pages/suscripciones-page/suscripciones-page.component';
 import { TarjetasPageComponent } from './pages/tarjetas-page/tarjetas-page.component';
@@ -19,6 +20,7 @@ const SECTION_LABELS: Record<NavSection, string> = {
   mes: 'Mes',
   tarjetas: 'Tarjetas',
   suscripciones: 'Suscripciones',
+  servicios: 'Servicios',
   ahorros: 'Ahorros',
   analisis: 'Análisis',
   simulador: 'Simulador',
@@ -29,6 +31,7 @@ const SECTION_SUBTITLES: Record<NavSection, string> = {
   mes: 'Movimientos del mes seleccionado',
   tarjetas: 'Gestión de tarjetas de crédito',
   suscripciones: 'Suscripciones activas y canceladas',
+  servicios: 'Luz, gas, agua y demás servicios recurrentes',
   ahorros: 'Tus ahorros en pesos y dólares',
   analisis: 'Visualizaciones y tendencias',
   simulador: 'Proyectá el impacto de una compra futura',
@@ -49,6 +52,7 @@ const SECTIONS_WITH_MONTH: NavSection[] = ['mes', 'analisis'];
     MesPageComponent,
     TarjetasPageComponent,
     SuscripcionesPageComponent,
+    ServiciosPageComponent,
     AhorrosPageComponent,
     AnalisisPageComponent,
     SimuladorPageComponent,

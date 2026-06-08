@@ -4,6 +4,7 @@ export type NavSection =
   | 'mes'
   | 'tarjetas'
   | 'suscripciones'
+  | 'servicios'
   | 'ahorros'
   | 'analisis'
   | 'simulador'
@@ -14,6 +15,7 @@ const VALID_SECTIONS: NavSection[] = [
   'mes',
   'tarjetas',
   'suscripciones',
+  'servicios',
   'ahorros',
   'analisis',
   'simulador',
