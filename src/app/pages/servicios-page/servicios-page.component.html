@@ -1,0 +1,68 @@
+<div class="space-y-4">
+  <!-- Empty state -->
+  @if (activeServices().length === 0 && archivedServices().length === 0 && !showAddForm()) {
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center">
+      <span class="inline-flex w-16 h-16 rounded-2xl bg-amber-100 text-amber-600 items-center justify-center mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+      </span>
+      <h2 class="text-lg font-bold text-slate-800 mb-2">Cargá tu primer servicio</h2>
+      <p class="text-sm text-slate-500 max-w-md mx-auto mb-4">
+        Edenor, Camuzzi, ABSA, internet, cable... lo que pagás todos los meses
+        en monto fijo o variable. Cargá las facturas y la app proyecta cuándo
+        y cuánto llega la próxima.
+      </p>
+      <button type="button" (click)="showAddForm.set(true)"
+              class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 transition">
+        + Agregar servicio
+      </button>
+    </div>
+  }
+
+  <!-- Lista de servicios activos -->
+  @for (service of activeServices(); track service.id) {
+    <app-service-card [service]="service"></app-service-card>
+  }
+
+  <!-- CTA agregar (si ya hay servicios y el form no está abierto) -->
+  @if ((activeServices().length > 0 || archivedServices().length > 0) && !showAddForm()) {
+    <button type="button" (click)="showAddForm.set(true)"
+            class="w-full py-3 rounded-2xl text-sm font-semibold text-amber-600 bg-amber-50 hover:bg-amber-100 transition flex items-center justify-center gap-1.5 border border-dashed border-amber-300">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Agregar servicio
+    </button>
+  }
+
+  <!-- Form de alta -->
+  @if (showAddForm()) {
+    <app-service-form
+      (saved)="onServiceAdded($event)"
+      (cancelled)="showAddForm.set(false)">
+    </app-service-form>
+  }
+
+  <!-- Archivados -->
+  @if (archivedServices().length > 0) {
+    <button type="button" (click)="showArchived.update(v => !v)"
+            class="w-full text-[11px] font-semibold text-slate-500 hover:text-slate-700 transition flex items-center justify-center gap-1.5 py-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 transition-transform"
+           [class.rotate-180]="showArchived()"
+           viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+      {{ showArchived() ? 'Ocultar' : 'Ver' }} archivados ({{ archivedServices().length }})
+    </button>
+
+    @if (showArchived()) {
+      <div class="space-y-2 opacity-70">
+        @for (service of archivedServices(); track service.id) {
+          <app-service-card [service]="service"></app-service-card>
+        }
+      </div>
+    }
+  }
+</div>

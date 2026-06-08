@@ -1,0 +1,45 @@
+<div class="bg-slate-50 rounded-xl p-3 space-y-3">
+  <h4 class="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+    {{ isEditMode() ? 'Editar factura' : 'Cargar factura' }}
+  </h4>
+
+  <form #f="ngForm" (ngSubmit)="submit()" class="grid grid-cols-12 gap-2">
+    <div class="col-span-6 sm:col-span-3">
+      <label class="block text-[10px] font-medium text-slate-500 mb-0.5">Vencimiento</label>
+      <input type="date" name="dueDate" [(ngModel)]="dueDate" required
+             class="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500">
+    </div>
+    <div class="col-span-6 sm:col-span-3">
+      <label class="block text-[10px] font-medium text-slate-500 mb-0.5">Monto</label>
+      <input type="number" step="0.01" name="amount" [(ngModel)]="amount" required
+             class="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500">
+    </div>
+    <div class="col-span-12 sm:col-span-3">
+      <label class="block text-[10px] font-medium text-slate-500 mb-0.5">
+        Comprobante <span class="text-slate-400">(opcional)</span>
+      </label>
+      <input type="text" name="comprobante" [(ngModel)]="comprobante" maxlength="30"
+             placeholder="N°"
+             class="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500">
+    </div>
+    <div class="col-span-12 sm:col-span-3">
+      <label class="block text-[10px] font-medium text-slate-500 mb-0.5">
+        Nota <span class="text-slate-400">(opcional)</span>
+      </label>
+      <input type="text" name="notes" [(ngModel)]="notes" maxlength="60"
+             placeholder="Ej: consumo alto"
+             class="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500">
+    </div>
+
+    <div class="col-span-12 flex justify-end gap-2 pt-1">
+      <button type="button" (click)="cancel()"
+              class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-300 transition">
+        Cancelar
+      </button>
+      <button type="submit" [disabled]="!f.valid"
+              class="px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition disabled:opacity-50">
+        {{ isEditMode() ? 'Guardar' : 'Cargar factura' }}
+      </button>
+    </div>
+  </form>
+</div>
