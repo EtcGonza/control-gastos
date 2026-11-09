@@ -11,6 +11,7 @@ import {
 import { roundMoney } from '../utils/currency.utils';
 import { clampDayInMonth, formatMonthLabel } from '../utils/date.utils';
 import { CardsService } from './cards.service';
+import { RecurringTemplatesService } from './recurring-templates.service';
 import { TransactionsService } from './transactions.service';
 import { UsdRateService } from './usd-rate.service';
 
@@ -32,6 +33,7 @@ export class SimulationService {
   private readonly tx = inject(TransactionsService);
   private readonly usdRate = inject(UsdRateService);
   private readonly cards = inject(CardsService);
+  private readonly templatesSvc = inject(RecurringTemplatesService);
 
   /** Punto de entrada principal. */
   run(items: SimulationItem[], config: SimulationConfig): SimulationResult {
@@ -70,7 +72,10 @@ export class SimulationService {
         if (impact.usdDirect) simulationImpactUsd += impact.usdDirect;
 
         // Acumular totales globales en una sola pasada.
+        // Nominal y real se acumulan ambos sobre el mismo horizonte para que
+        // sean comparables (la diferencia refleja recargos + devaluación).
         totalRealArs += impact.arsImpact;
+        totalNominalArs += impact.arsImpactNominal;
         if (impact.usdDirect) totalNominalUsd += impact.usdDirect;
       }
 
@@ -104,11 +109,6 @@ export class SimulationService {
         simulationImpactUsd: simulationImpactUsd > 0 ? roundMoney(simulationImpactUsd) : undefined,
       };
     });
-
-    // Nominal (sin recargos, USD al TC actual): suma simple de items.
-    for (const item of items) {
-      totalNominalArs += this.nominalArsOf(item, latestRate);
-    }
 
     const peakCommittedPct = months.reduce((max, m) => Math.max(max, m.committedPct), 0);
     const monthsInRed = months.filter((m) => m.isNegative).length;
@@ -213,36 +213,58 @@ export class SimulationService {
    * Incluye:
    *  - Cuotas existentes que caen en ese mes (convertidas a ARS si son USD).
    *  - Suscripciones existentes activas en ese mes (convertidas a ARS).
-   *  - Transacciones manuales con `fixed: true` que ya existen en el mes
-   *    (esto solo aplica al mes actual; los meses futuros no tienen tx reales).
+   *  - Facturas de servicios (reales o estimadas) que caen en ese mes.
+   *  - **Plantillas de gasto** marcadas como recurrentes (alquiler, etc.).
+   *  - Transacciones manuales con `fixed: true` que ya existen en el mes.
    *
-   * Para evitar contar el mes actual de manera asimétrica (donde sí hay tx
-   * reales) vs los futuros (donde no), proyectamos así:
-   *  - Mes actual: usa el dato real (`expensesForMonth` filtrando gastos fijos).
-   *  - Meses futuros: solo cuotas + suscripciones (no plantillas manuales,
-   *    porque el usuario podría no haberlas aplicado todavía).
+   * Para no duplicar:
+   *  - **Mes actual**: cuenta tx manuales fijas reales + plantillas que NO
+   *    tienen tx fija real ese mes con la misma key.
+   *  - **Meses futuros**: cuenta todas las plantillas de gasto (porque las
+   *    tx reales aún no existen).
+   *  - **Meses pasados**: no proyecta plantillas, sólo cuotas/subs/servicios.
    */
   private existingFixedForRaw(month: string): number {
-    // Cuotas + suscripciones — esto es virtual, vale para cualquier mes.
+    // 1) Cuotas + suscripciones + servicios — esto es virtual, vale para cualquier mes.
     let total = this.tx
       .entriesForMonth(month)
       .filter(
         (e) =>
-          (e.source === 'installment' || e.source === 'subscription') &&
+          (e.source === 'installment' ||
+            e.source === 'subscription' ||
+            e.source === 'service') &&
           e.type === 'gasto'
       )
       .reduce((acc, e) => acc + this.entryArs(e), 0);
 
-    // Transacciones manuales fijas: sólo cuentan en el mes actual (las
-    // futuras no se materializan sin aplicar la plantilla).
     const now = new Date();
     const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const gastoTemplates = this.tx.templates().filter((t) => t.type === 'gasto');
+
     if (month === currentMonth) {
-      total += this.tx
+      // 2a) Mes actual: tx manuales fijas reales del mes.
+      const realFixedThisMonth = this.tx
         .entriesForMonth(month)
-        .filter((e) => e.source === 'transaction' && e.type === 'gasto' && e.fixed)
-        .reduce((acc, e) => acc + e.amount, 0);
+        .filter((e) => e.source === 'transaction' && e.type === 'gasto' && e.fixed);
+      total += realFixedThisMonth.reduce((acc, e) => acc + e.amount, 0);
+
+      // 2b) Plantillas de gasto que aún no se aplicaron en este mes
+      //     (matching por templateKey para no duplicar Alquiler, etc.).
+      const appliedKeys = new Set(
+        realFixedThisMonth.map((e) =>
+          this.templatesSvc.templateKey(e.type, e.description, e.category)
+        )
+      );
+      const pendingTemplates = gastoTemplates.filter(
+        (t) =>
+          !appliedKeys.has(this.templatesSvc.templateKey(t.type, t.description, t.category))
+      );
+      total += pendingTemplates.reduce((acc, t) => acc + t.amount, 0);
+    } else if (month > currentMonth) {
+      // 3) Meses futuros: todas las plantillas de gasto se proyectan.
+      total += gastoTemplates.reduce((acc, t) => acc + t.amount, 0);
     }
+    // Meses pasados: no proyectamos plantillas.
 
     return total;
   }
@@ -265,7 +287,8 @@ export class SimulationService {
 
   /**
    * Cuánto aporta `item` al mes `month` (offset meses desde hoy).
-   * Devuelve el impacto en ARS y, si aplica, la fracción en USD-directo.
+   * Devuelve el impacto en ARS (real y nominal) y, si aplica, la fracción
+   * en USD-directo.
    */
   private itemImpactFor(
     item: SimulationItem,
@@ -273,7 +296,7 @@ export class SimulationService {
     offset: number,
     config: SimulationConfig,
     latestRate: { date: string; rate: number } | null
-  ): { arsImpact: number; usdDirect?: number } {
+  ): { arsImpact: number; arsImpactNominal: number; usdDirect?: number } {
     switch (item.type) {
       case 'contado':
         return this.contadoImpact(item, month, offset, config, latestRate);
@@ -291,10 +314,10 @@ export class SimulationService {
     offset: number,
     config: SimulationConfig,
     latestRate: { date: string; rate: number } | null
-  ): { arsImpact: number; usdDirect?: number } {
-    if (!item.purchaseDate) return { arsImpact: 0 };
+  ): { arsImpact: number; arsImpactNominal: number; usdDirect?: number } {
+    if (!item.purchaseDate) return { arsImpact: 0, arsImpactNominal: 0 };
     const purchaseMonth = item.purchaseDate.slice(0, 7);
-    if (purchaseMonth !== month) return { arsImpact: 0 };
+    if (purchaseMonth !== month) return { arsImpact: 0, arsImpactNominal: 0 };
 
     return this.convertItemToArs(item, item.purchaseDate, offset, config, latestRate);
   }
@@ -306,16 +329,18 @@ export class SimulationService {
     offset: number,
     config: SimulationConfig,
     latestRate: { date: string; rate: number } | null
-  ): { arsImpact: number; usdDirect?: number } {
+  ): { arsImpact: number; arsImpactNominal: number; usdDirect?: number } {
     if (!item.cardId || !item.installments || item.installments < 1 || !item.purchaseDate) {
-      return { arsImpact: 0 };
+      return { arsImpact: 0, arsImpactNominal: 0 };
     }
     const card = this.cards.cardById(item.cardId);
-    if (!card) return { arsImpact: 0 };
+    if (!card) return { arsImpact: 0, arsImpactNominal: 0 };
 
     const firstMonth = this.cards.firstBillingMonth(item.purchaseDate, card.closingDay);
     const diff = this.monthDiff(firstMonth, month);
-    if (diff < 0 || diff >= item.installments) return { arsImpact: 0 };
+    if (diff < 0 || diff >= item.installments) {
+      return { arsImpact: 0, arsImpactNominal: 0 };
+    }
 
     const installmentAmount = item.amount / item.installments;
     // Para USD, la fecha de "cierre" del resumen de este mes:
@@ -339,10 +364,12 @@ export class SimulationService {
     offset: number,
     config: SimulationConfig,
     latestRate: { date: string; rate: number } | null
-  ): { arsImpact: number; usdDirect?: number } {
-    if (!item.subscriptionCardId || !item.startDate) return { arsImpact: 0 };
+  ): { arsImpact: number; arsImpactNominal: number; usdDirect?: number } {
+    if (!item.subscriptionCardId || !item.startDate) {
+      return { arsImpact: 0, arsImpactNominal: 0 };
+    }
     const card = this.cards.cardById(item.subscriptionCardId);
-    if (!card) return { arsImpact: 0 };
+    if (!card) return { arsImpact: 0, arsImpactNominal: 0 };
 
     const chargeDay = Number(item.startDate.split('-')[2]);
     const [mY, mM] = month.split('-').map(Number);
@@ -374,7 +401,7 @@ export class SimulationService {
         latestRate
       );
     }
-    return { arsImpact: 0 };
+    return { arsImpact: 0, arsImpactNominal: 0 };
   }
 
   /** Convierte el monto de un item ya ubicado en un mes a ARS según moneda. */
@@ -384,8 +411,10 @@ export class SimulationService {
     offset: number,
     config: SimulationConfig,
     latestRate: { date: string; rate: number } | null
-  ): { arsImpact: number; usdDirect?: number } {
-    if (item.currency === 'ARS') return { arsImpact: item.amount };
+  ): { arsImpact: number; arsImpactNominal: number; usdDirect?: number } {
+    if (item.currency === 'ARS') {
+      return { arsImpact: item.amount, arsImpactNominal: item.amount };
+    }
     return this.convertAmountToArs(
       item.amount,
       item.currency,
@@ -401,6 +430,12 @@ export class SimulationService {
    * Convierte un monto USD a ARS aplicando recargo + TC proyectado del mes.
    * Si el modo es `usd-payment`, además devuelve el monto USD como obligación
    * directa.
+   *
+   * Devuelve dos valores comparables sobre el mismo período:
+   *  - `arsImpact`: costo REAL (con recargos y TC proyectado mes a mes).
+   *  - `arsImpactNominal`: costo NOMINAL (sin recargos, al TC actual).
+   *
+   * La diferencia entre ambos refleja recargos USD + devaluación proyectada.
    */
   private convertAmountToArs(
     amount: number,
@@ -410,12 +445,18 @@ export class SimulationService {
     offset: number,
     config: SimulationConfig,
     latestRate: { date: string; rate: number } | null
-  ): { arsImpact: number; usdDirect?: number } {
-    if (currency === 'ARS') return { arsImpact: amount };
+  ): { arsImpact: number; arsImpactNominal: number; usdDirect?: number } {
+    if (currency === 'ARS') {
+      return { arsImpact: amount, arsImpactNominal: amount };
+    }
 
     const mode = surchargeMode ?? 'auto';
     const surchargePct = this.usdRate.surchargeForDate(referenceDate, mode);
     const projectedRate = this.projectedRateFor(offset, config, latestRate);
+    const currentRate = latestRate?.rate ?? 0;
+
+    // Nominal: USD * TC actual (sin recargos, sin proyección de devaluación).
+    const arsImpactNominal = amount * currentRate;
 
     if (mode === 'usd-payment') {
       // Pago directo en USD: no se convierte (queda como obligación USD).
@@ -423,11 +464,14 @@ export class SimulationService {
       // el balance ARS refleje el costo de oportunidad. Esto es coherente con
       // cómo el sistema actual incluye USD-direct en `entryArsAmount`.
       const arsImpact = projectedRate != null ? amount * projectedRate : 0;
-      return { arsImpact, usdDirect: amount };
+      return { arsImpact, arsImpactNominal, usdDirect: amount };
     }
 
-    if (projectedRate == null) return { arsImpact: 0 };
-    return { arsImpact: amount * projectedRate * (1 + surchargePct) };
+    if (projectedRate == null) return { arsImpact: 0, arsImpactNominal };
+    return {
+      arsImpact: amount * projectedRate * (1 + surchargePct),
+      arsImpactNominal,
+    };
   }
 
   /** TC proyectado para un mes con offset desde hoy. */
@@ -439,17 +483,6 @@ export class SimulationService {
     if (!latestRate) return null;
     const factor = Math.pow(1 + config.monthlyDevaluationPct / 100, offset);
     return latestRate.rate * factor;
-  }
-
-  /** Costo nominal en ARS (sin recargos) usando el TC actual. */
-  private nominalArsOf(
-    item: SimulationItem,
-    latestRate: { date: string; rate: number } | null
-  ): number {
-    // Para nominal contamos el "amount" del item como total a debitar.
-    if (item.currency === 'ARS') return item.amount;
-    if (!latestRate) return 0;
-    return item.amount * latestRate.rate;
   }
 
   // ============================================================
