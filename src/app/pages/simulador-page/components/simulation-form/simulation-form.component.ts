@@ -10,11 +10,12 @@ import {
 } from '../../../../core/models/simulation/simulation.model';
 import { TransactionsService } from '../../../../core/services/transactions.service';
 import { todayIso } from '../../../../core/utils/date.utils';
+import { InfoTooltipComponent } from '../../../../shared/components/info-tooltip/info-tooltip.component';
 
 @Component({
   selector: 'app-simulation-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, InfoTooltipComponent],
   templateUrl: './simulation-form.component.html',
 })
 export class SimulationFormComponent {

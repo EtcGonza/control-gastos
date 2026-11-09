@@ -41,11 +41,50 @@
   <!-- Monto + moneda -->
   <div class="grid grid-cols-3 gap-2">
     <div class="col-span-2">
-      <label class="block text-xs font-medium text-slate-600 mb-1">
+      <label class="text-xs font-medium text-slate-600 mb-1 flex items-center">
         @switch (type()) {
           @case ('contado') { Monto total }
           @case ('cuotas') { Total a debitar }
           @case ('suscripcion') { Monto mensual }
+        }
+        @switch (type()) {
+          @case ('contado') {
+            <app-info-tooltip>
+              <p class="font-semibold mb-1">Monto total</p>
+              <p class="text-slate-300">
+                Lo que vas a pagar de una vez. Para compras en moneda extranjera
+                el sistema lo convierte usando el TC y el recargo elegidos abajo.
+              </p>
+            </app-info-tooltip>
+          }
+          @case ('cuotas') {
+            <app-info-tooltip>
+              <p class="font-semibold mb-1">Total a debitar</p>
+              <p class="text-slate-300">
+                Es el <b>monto total que te va a debitar la tarjeta</b>
+                (suma de todas las cuotas), incluyendo intereses si la
+                compra los tiene.
+              </p>
+              <p class="text-slate-300 mt-2">
+                <b>No ingreses sólo el precio del producto</b> si después
+                se le suman intereses: el sistema divide este monto entre
+                las cuotas, así coincide con el resumen del banco.
+              </p>
+              <p class="text-slate-400 text-[11px] mt-2">
+                Ej.: producto a $80.000 en 18 cuotas con interés total
+                $103.500 → ingresá <b>103.500</b>.
+              </p>
+            </app-info-tooltip>
+          }
+          @case ('suscripcion') {
+            <app-info-tooltip>
+              <p class="font-semibold mb-1">Monto mensual</p>
+              <p class="text-slate-300">
+                Lo que se va a debitar todos los meses durante el horizonte
+                que elijas (o hasta la fecha de cancelación que indiques).
+              </p>
+            </app-info-tooltip>
+          }
         }
       </label>
       <input type="number" min="0" step="0.01" [(ngModel)]="amount" (ngModelChange)="emitChange()"
@@ -210,7 +249,21 @@
       <div class="mt-3 space-y-3">
         <!-- Horizonte -->
         <div>
-          <label class="block text-xs font-medium text-slate-600 mb-1">Horizonte</label>
+          <label class="text-xs font-medium text-slate-600 mb-1 flex items-center">
+            Horizonte
+            <app-info-tooltip>
+              <p class="font-semibold mb-1">Horizonte de proyección</p>
+              <p class="text-slate-300">
+                Cuántos meses hacia adelante se proyecta el flujo. Empieza
+                desde el mes actual.
+              </p>
+              <p class="text-slate-300 mt-2">
+                Si la compra tiene más cuotas que el horizonte, el sistema
+                igual cuenta el costo total real, pero la tabla y el chart
+                solo muestran los meses incluidos.
+              </p>
+            </app-info-tooltip>
+          </label>
           <div class="grid grid-cols-4 gap-1 bg-slate-100 p-1 rounded-xl">
             @for (h of horizonOptions; track h) {
               <button type="button" (click)="setHorizon(h)"
@@ -224,7 +277,24 @@
 
         <!-- Base de ingresos -->
         <div>
-          <label class="block text-xs font-medium text-slate-600 mb-1">Base de ingresos</label>
+          <label class="text-xs font-medium text-slate-600 mb-1 flex items-center">
+            Base de ingresos
+            <app-info-tooltip>
+              <p class="font-semibold mb-1">Base de ingresos</p>
+              <p class="text-slate-300">
+                De dónde sale el monto de ingresos mensuales que se proyecta.
+              </p>
+              <ul class="text-slate-300 mt-1 pl-3 list-disc">
+                <li><b>Prom. 3m</b>: promedio de los últimos 3 meses completos.</li>
+                <li><b>Último mes</b>: el mes anterior al actual.</li>
+                <li><b>Manual</b>: vos lo ingresás (útil para escenarios).</li>
+              </ul>
+              <p class="text-slate-400 text-[11px] mt-2">
+                Si todavía no tenés ingresos cargados, usá <b>Manual</b>.
+                Sin esto el balance proyectado va a dar negativo siempre.
+              </p>
+            </app-info-tooltip>
+          </label>
           <div class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl">
             <button type="button" (click)="setIncomeBase('avg-3m')"
                     class="py-1.5 rounded-lg text-[11px] font-semibold transition"
@@ -252,12 +322,43 @@
         <!-- Inflación / devaluación -->
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="block text-xs font-medium text-slate-600 mb-1">Inflación mensual %</label>
+            <label class="text-xs font-medium text-slate-600 mb-1 flex items-center">
+              Inflación mensual %
+              <app-info-tooltip>
+                <p class="font-semibold mb-1">Inflación esperada (mensual)</p>
+                <p class="text-slate-300">
+                  Crece <b>los gastos fijos existentes</b> (cuotas previas,
+                  suscripciones, servicios) y los ingresos mes a mes.
+                </p>
+                <p class="text-slate-300 mt-2">
+                  No afecta a la compra simulada: sus cuotas tienen monto
+                  nominal fijo por contrato.
+                </p>
+                <p class="text-slate-400 text-[11px] mt-2">
+                  Dejá 0% para una proyección "real" (todo plano). Subilo si
+                  querés ver escenarios pesimistas.
+                </p>
+              </app-info-tooltip>
+            </label>
             <input type="number" min="0" max="20" step="0.5" [(ngModel)]="monthlyInflationPct" (ngModelChange)="emitChange()"
                    class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
           </div>
           <div>
-            <label class="block text-xs font-medium text-slate-600 mb-1">Devaluación mensual %</label>
+            <label class="text-xs font-medium text-slate-600 mb-1 flex items-center">
+              Devaluación mensual %
+              <app-info-tooltip>
+                <p class="font-semibold mb-1">Devaluación esperada (mensual)</p>
+                <p class="text-slate-300">
+                  Hace crecer el TC oficial mes a mes a partir del último
+                  conocido. Afecta el ARS-equivalente de cuotas y
+                  suscripciones en USD a futuro.
+                </p>
+                <p class="text-slate-400 text-[11px] mt-2">
+                  Dejá 0% para asumir TC plano. Sólo aplica si la compra
+                  simulada o algún gasto fijo está en USD.
+                </p>
+              </app-info-tooltip>
+            </label>
             <input type="number" min="0" max="20" step="0.5" [(ngModel)]="monthlyDevaluationPct" (ngModelChange)="emitChange()"
                    class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
           </div>

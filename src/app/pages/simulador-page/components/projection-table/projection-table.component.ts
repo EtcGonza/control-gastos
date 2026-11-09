@@ -4,11 +4,12 @@ import {
   MonthProjection,
   SimulationResult,
 } from '../../../../core/models/simulation/simulation.model';
+import { InfoTooltipComponent } from '../../../../shared/components/info-tooltip/info-tooltip.component';
 
 @Component({
   selector: 'app-projection-table',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, InfoTooltipComponent],
   templateUrl: './projection-table.component.html',
 })
 export class ProjectionTableComponent {

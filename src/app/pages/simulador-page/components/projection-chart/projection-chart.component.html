@@ -1,7 +1,28 @@
 @if (result && result.months.length > 0) {
   <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
     <div class="flex items-center justify-between mb-3">
-      <h3 class="text-lg font-semibold text-slate-800">Flujo proyectado</h3>
+      <h3 class="text-lg font-semibold text-slate-800 flex items-center">
+        Flujo proyectado
+        <app-info-tooltip>
+          <p class="font-semibold mb-1">Cómo leer este gráfico</p>
+          <p class="text-slate-300">
+            Cada barra es un mes del horizonte:
+          </p>
+          <ul class="text-slate-300 mt-1 pl-3 list-disc">
+            <li><b class="text-slate-200">Slate</b>: gastos fijos actuales (cuotas existentes + suscripciones + servicios).</li>
+            <li><b class="text-violet-300">Violeta</b>: lo que suma la compra simulada en ese mes.</li>
+            <li><b class="text-emerald-300">Línea verde</b>: ingresos proyectados.</li>
+          </ul>
+          <p class="text-slate-300 mt-2">
+            Si la suma de los dos colores supera la línea verde, ese mes
+            tenés balance negativo.
+          </p>
+          <p class="text-slate-400 text-[11px] mt-2">
+            El segmento violeta tiene un alto mínimo para que sea visible
+            aun cuando proporcionalmente sea chico.
+          </p>
+        </app-info-tooltip>
+      </h3>
       <div class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-600">
         <span class="flex items-center gap-1.5">
           <span class="w-3 h-3 rounded-sm bg-slate-300"></span> Fijos actuales
@@ -38,12 +59,14 @@
                 [attr.width]="barW()"
                 [attr.height]="barH(m.existingFixedExpenses)"
                 fill="#cbd5e1" rx="2"/>
-          <!-- Encima: impacto de la compra -->
-          <rect [attr.x]="barX(i)"
-                [attr.y]="yOf(m.totalFixedExpenses)"
-                [attr.width]="barW()"
-                [attr.height]="barH(m.simulationImpact)"
-                fill="#8b5cf6" rx="2"/>
+          <!-- Encima: impacto de la compra (con alto mínimo para que sea visible aun siendo proporcionalmente chico) -->
+          @if (m.simulationImpact > 0) {
+            <rect [attr.x]="barX(i)"
+                  [attr.y]="simulationBarY(m)"
+                  [attr.width]="barW()"
+                  [attr.height]="simulationBarH(m)"
+                  fill="#8b5cf6" rx="2"/>
+          }
         }
 
         <!-- Línea de ingresos proyectados -->

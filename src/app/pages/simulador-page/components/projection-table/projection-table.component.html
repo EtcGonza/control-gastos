@@ -23,13 +23,115 @@
         <thead>
           <tr class="text-left text-[10px] uppercase text-slate-400 font-semibold border-b border-slate-200">
             <th class="py-2 px-2">Mes</th>
-            <th class="py-2 px-2 text-right">Ingresos</th>
-            <th class="py-2 px-2 text-right">Fijos actuales</th>
-            <th class="py-2 px-2 text-right">Impacto compra</th>
-            <th class="py-2 px-2 text-right">Total fijos</th>
-            <th class="py-2 px-2 text-right">Balance</th>
-            <th class="py-2 px-2 text-right">% compr.</th>
-            <th class="py-2 px-2 text-right">Δ vs sin compra</th>
+            <th class="py-2 px-2 text-right">
+              <span class="inline-flex items-center">
+                Ingresos
+                <app-info-tooltip>
+                  <p class="font-semibold mb-1">Ingresos proyectados</p>
+                  <p class="text-slate-300">
+                    Base de ingresos del mes (según configuración) con la
+                    inflación opcional aplicada.
+                  </p>
+                </app-info-tooltip>
+              </span>
+            </th>
+            <th class="py-2 px-2 text-right">
+              <span class="inline-flex items-center">
+                Fijos actuales
+                <app-info-tooltip>
+                  <p class="font-semibold mb-1">Gastos fijos actuales</p>
+                  <p class="text-slate-300">
+                    Lo que ya pagás en este mes <b>antes</b> de la compra simulada:
+                  </p>
+                  <ul class="text-slate-300 mt-1 pl-3 list-disc">
+                    <li>Cuotas de tarjeta existentes.</li>
+                    <li>Suscripciones activas.</li>
+                    <li>Facturas de servicios (luz, gas, agua, etc.) reales o estimadas.</li>
+                    <li>Transacciones manuales marcadas como "fijo".</li>
+                    <li><b>Plantillas de gasto</b> (alquiler, sueldo, etc.) proyectadas a futuro.</li>
+                  </ul>
+                  <p class="text-slate-400 text-[11px] mt-2">
+                    En el mes actual contamos transacciones reales cargadas
+                    + plantillas que todavía no aplicaste (para evitar
+                    duplicados). En meses futuros, todas las plantillas se
+                    proyectan automáticamente.
+                  </p>
+                </app-info-tooltip>
+              </span>
+            </th>
+            <th class="py-2 px-2 text-right">
+              <span class="inline-flex items-center">
+                Impacto compra
+                <app-info-tooltip>
+                  <p class="font-semibold mb-1">Impacto de la compra simulada</p>
+                  <p class="text-slate-300">
+                    Cuánto suma la compra simulada al gasto del mes (en ARS,
+                    con recargos y conversión USD si corresponde).
+                  </p>
+                  <p class="text-slate-300 mt-2">
+                    En cuotas, ves la cuota mensual. Al contado, sólo aparece
+                    en un mes. Si es suscripción, en todos los meses activos.
+                  </p>
+                </app-info-tooltip>
+              </span>
+            </th>
+            <th class="py-2 px-2 text-right">
+              <span class="inline-flex items-center">
+                Total fijos
+                <app-info-tooltip>
+                  <p class="font-semibold mb-1">Total fijos del mes</p>
+                  <p class="text-slate-300">
+                    Fijos actuales + impacto de la compra simulada. Es el monto
+                    total a pagar ese mes.
+                  </p>
+                </app-info-tooltip>
+              </span>
+            </th>
+            <th class="py-2 px-2 text-right">
+              <span class="inline-flex items-center">
+                Balance
+                <app-info-tooltip>
+                  <p class="font-semibold mb-1">Balance proyectado</p>
+                  <p class="text-slate-300">
+                    Ingresos − Total fijos. Si es negativo, gastás más de lo
+                    que entra (fila en rojo).
+                  </p>
+                </app-info-tooltip>
+              </span>
+            </th>
+            <th class="py-2 px-2 text-right">
+              <span class="inline-flex items-center">
+                % compr.
+                <app-info-tooltip>
+                  <p class="font-semibold mb-1">% comprometido</p>
+                  <p class="text-slate-300">
+                    Total fijos ÷ Ingresos × 100. Qué proporción de tus ingresos
+                    se va en gastos fijos.
+                  </p>
+                  <p class="text-slate-300 mt-2">
+                    Color:
+                    <br><span class="text-emerald-300">verde</span> ≤ 50%.
+                    <br><span class="text-amber-300">ámbar</span> 50–80%.
+                    <br><span class="text-rose-300">rojo</span> &gt; 80%.
+                  </p>
+                </app-info-tooltip>
+              </span>
+            </th>
+            <th class="py-2 px-2 text-right">
+              <span class="inline-flex items-center">
+                Δ vs sin compra
+                <app-info-tooltip>
+                  <p class="font-semibold mb-1">Diferencia respecto a no comprar</p>
+                  <p class="text-slate-300">
+                    Cuánto cambia el balance del mes por hacer esta compra.
+                    Siempre negativo (la compra siempre resta).
+                  </p>
+                  <p class="text-slate-400 text-[11px] mt-2">
+                    Te dice: <i>"si no compraba esto, tenía $X más este mes"</i>.
+                  </p>
+                </app-info-tooltip>
+              </span>
+            </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">

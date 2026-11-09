@@ -4,7 +4,39 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-slate-500 text-sm font-medium">Costo total real</span>
+          <span class="text-slate-500 text-sm font-medium flex items-center">
+            @if (result.totalRealArs > result.totalNominalArs) {
+              Costo total real
+            } @else {
+              Costo total
+            }
+            <app-info-tooltip>
+              <p class="font-semibold mb-1">Costo total real</p>
+              <p class="text-slate-300">
+                Suma del impacto de la compra simulada <b>en todos los meses
+                del horizonte</b>, en pesos. Incluye:
+              </p>
+              <ul class="text-slate-300 mt-1 pl-3 list-disc">
+                <li>Cuotas / pagos que efectivamente caen dentro del horizonte.</li>
+                <li>Recargos USD (PAÍS, IVA digital, turismo) si aplica.</li>
+                <li>Devaluación proyectada mes a mes (si configuraste &gt; 0%).</li>
+              </ul>
+              <p class="text-slate-300 mt-2">
+                <b>Nominal</b>: el mismo costo pero <b>sin recargos</b> y al TC actual.
+                <br><b>Sobrecosto</b>: cuánto te suman los recargos + la devaluación.
+              </p>
+              <p class="text-slate-400 text-[11px] mt-2">
+                Si la compra tiene más cuotas que el horizonte, ambos totales
+                reflejan sólo lo que cae dentro del horizonte (lo va a indicar
+                el warning correspondiente).
+              </p>
+              <p class="text-slate-400 text-[11px] mt-2">
+                En una compra <b>ARS sin devaluación</b>, nominal = real
+                (no hay sobrecosto). En USD o con devaluación &gt; 0%, real
+                es mayor que nominal.
+              </p>
+            </app-info-tooltip>
+          </span>
           <span class="w-9 h-9 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
@@ -12,12 +44,16 @@
           </span>
         </div>
         <p class="text-2xl font-bold text-slate-800">{{ '$' }}{{ result.totalRealArs | number:'1.0-0' }}</p>
-        <p class="text-[11px] text-slate-400 mt-1">
-          Nominal {{ '$' }}{{ result.totalNominalArs | number:'1.0-0' }}
-          @if (result.totalRealArs > result.totalNominalArs) {
+        @if (result.totalRealArs > result.totalNominalArs) {
+          <p class="text-[11px] text-slate-400 mt-1">
+            Nominal {{ '$' }}{{ result.totalNominalArs | number:'1.0-0' }}
             · sobrecosto {{ '$' }}{{ result.totalRealArs - result.totalNominalArs | number:'1.0-0' }}
-          }
-        </p>
+          </p>
+        } @else {
+          <p class="text-[11px] text-slate-400 mt-1 italic">
+            Sin sobrecosto (compra en pesos o sin devaluación proyectada)
+          </p>
+        }
         @if (result.totalNominalUsd > 0) {
           <p class="text-[11px] text-emerald-600 mt-0.5">
             + US${{ '$' }} {{ result.totalNominalUsd | number:'1.2-2' }} en USD
@@ -27,7 +63,27 @@
 
       <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-slate-500 text-sm font-medium">Pico % comprometido</span>
+          <span class="text-slate-500 text-sm font-medium flex items-center">
+            Pico % comprometido
+            <app-info-tooltip>
+              <p class="font-semibold mb-1">Pico % comprometido</p>
+              <p class="text-slate-300">
+                El máximo porcentaje de tus ingresos que se va en gastos
+                fijos en un solo mes del horizonte (incluyendo la compra
+                simulada).
+              </p>
+              <p class="text-slate-400 text-[11px] mt-2">
+                Cálculo por mes:
+                <br>(cuotas + suscripciones + servicios + compra simulada) ÷ ingresos × 100.
+              </p>
+              <p class="text-slate-300 mt-2">
+                Color:
+                <br><span class="text-emerald-300">verde</span> ≤ 50% (holgado).
+                <br><span class="text-amber-300">ámbar</span> 50–80% (moderado).
+                <br><span class="text-rose-300">rojo</span> &gt; 80% (ajustado).
+              </p>
+            </app-info-tooltip>
+          </span>
           <span class="w-9 h-9 rounded-full flex items-center justify-center"
                 [ngClass]="result.peakCommittedPct > 80
                   ? 'bg-rose-100 text-rose-600'
@@ -54,7 +110,25 @@
 
       <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-slate-500 text-sm font-medium">Meses en rojo</span>
+          <span class="text-slate-500 text-sm font-medium flex items-center">
+            Meses en rojo
+            <app-info-tooltip>
+              <p class="font-semibold mb-1">Meses en rojo</p>
+              <p class="text-slate-300">
+                Cantidad de meses dentro del horizonte donde el
+                <b>balance proyectado es negativo</b> (gastos fijos &gt; ingresos).
+              </p>
+              <p class="text-slate-300 mt-2">
+                <b>Moderados</b>: meses con 50–80% comprometido (no negativo
+                pero ajustado).
+                <br><b>Ajustados</b>: meses con &gt; 80% comprometido.
+              </p>
+              <p class="text-slate-400 text-[11px] mt-2">
+                Si este número es &gt; 0, la compra te deja sin margen en
+                algún mes. Probá con más cuotas o menos monto.
+              </p>
+            </app-info-tooltip>
+          </span>
           <span class="w-9 h-9 rounded-full flex items-center justify-center"
                 [ngClass]="result.monthsInRed > 0 ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
